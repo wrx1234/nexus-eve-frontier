@@ -31,7 +31,7 @@ export function CopyButton({ value }: CopyButtonProps) {
   );
 }
 
-export const CodeSnippet = ({ value = "https://t.me/SuiJarvisBot" }: { value?: string }) => {
+export const CodeSnippet = ({ value = "https://t.me/EVENexusBot" }: { value?: string }) => {
   return (
     <div className="relative max-w-md mx-auto">
       <div className="flex items-center justify-between px-4 py-2 bg-muted/50 border rounded-t-lg">

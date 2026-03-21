@@ -67,7 +67,7 @@ export function Header({ lang, setLang }: HeaderProps) {
 	const t = {
 		en: {
 			features: 'Features',
-			sniper: 'Sniper',
+			ecosystem: 'Ecosystem',
 			architecture: 'Architecture',
 			dashboard: 'Dashboard',
 			launch: 'Launch Bot',
@@ -75,7 +75,7 @@ export function Header({ lang, setLang }: HeaderProps) {
 		},
 		cn: {
 			features: '功能',
-			sniper: '狙击',
+			ecosystem: '生态',
 			architecture: '架构',
 			dashboard: '仪表盘',
 			launch: '启动机器人',
@@ -94,7 +94,7 @@ export function Header({ lang, setLang }: HeaderProps) {
 				<div className="flex items-center gap-5">
 					<a href="#" className="hover:bg-accent rounded-md p-2">
 						<div className="text-xl font-bold text-foreground">
-							Sui DeFi Jarvis
+							NEXUS
 						</div>
 					</a>
 					<NavigationMenu className="hidden md:flex">
@@ -109,10 +109,10 @@ export function Header({ lang, setLang }: HeaderProps) {
 							</NavigationMenuLink>
 							<NavigationMenuLink className="px-4" asChild>
 								<button
-									onClick={() => scrollToSection('sniper')}
+									onClick={() => scrollToSection('ecosystem')}
 									className="hover:bg-accent rounded-md p-2"
 								>
-									{t[lang].sniper}
+									{t[lang].ecosystem}
 								</button>
 							</NavigationMenuLink>
 							<NavigationMenuLink className="px-4" asChild>
@@ -143,12 +143,12 @@ export function Header({ lang, setLang }: HeaderProps) {
 						{lang === 'en' ? '🇨🇳' : '🇬🇧'}
 					</Button>
 					<Button variant="outline" asChild>
-						<a href="https://github.com/wrx1234/sui-hackathon" target="_blank" rel="noopener noreferrer">
+						<a href="https://github.com/CryptoMaN-Kamel/eve-frontier-hackathon" target="_blank" rel="noopener noreferrer">
 							{t[lang].github}
 						</a>
 					</Button>
 					<Button asChild>
-						<a href="https://t.me/SuiJarvisBot" target="_blank" rel="noopener noreferrer">
+						<a href="https://t.me/EVENexusBot" target="_blank" rel="noopener noreferrer">
 							{t[lang].launch}
 						</a>
 					</Button>
@@ -174,10 +174,10 @@ export function Header({ lang, setLang }: HeaderProps) {
 						{t[lang].features}
 					</button>
 					<button
-						onClick={() => scrollToSection('sniper')}
+						onClick={() => scrollToSection('ecosystem')}
 						className="text-left p-2 hover:bg-accent rounded-md"
 					>
-						{t[lang].sniper}
+						{t[lang].ecosystem}
 					</button>
 					<button
 						onClick={() => scrollToSection('architecture')}
@@ -201,12 +201,12 @@ export function Header({ lang, setLang }: HeaderProps) {
 						{lang === 'en' ? '🇨🇳 中文' : '🇬🇧 English'}
 					</Button>
 					<Button variant="outline" className="w-full bg-transparent" asChild>
-						<a href="https://github.com/wrx1234/sui-hackathon" target="_blank" rel="noopener noreferrer">
+						<a href="https://github.com/CryptoMaN-Kamel/eve-frontier-hackathon" target="_blank" rel="noopener noreferrer">
 							{t[lang].github}
 						</a>
 					</Button>
 					<Button className="w-full" asChild>
-						<a href="https://t.me/SuiJarvisBot" target="_blank" rel="noopener noreferrer">
+						<a href="https://t.me/EVENexusBot" target="_blank" rel="noopener noreferrer">
 							{t[lang].launch}
 						</a>
 					</Button>

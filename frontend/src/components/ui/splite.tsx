@@ -14,7 +14,7 @@ const SplineFallback = () => (
     <svg width="80" height="80" viewBox="0 0 36 44" fill="none" className="animate-pulse">
       <path d="M23.5 5.7 16.2.4a2.1 2.1 0 0 0-2.4 0L.4 10a2 2 0 0 0-.4 1.2v21.6c0 .5.2.9.4 1.2l13.4 9.6a2.1 2.1 0 0 0 2.4 0L29.6 34a2 2 0 0 0 .4-1.2V11.2a2 2 0 0 0-.4-1.2L23.5 5.7Z" fill="#4da2ff"/>
     </svg>
-    <p className="text-neutral-400 text-sm">Sui DeFi Jarvis</p>
+    <p className="text-neutral-400 text-sm">NEXUS</p>
   </div>
 )
 

@@ -58,7 +58,7 @@ export function Header({ lang, onLangChange }: HeaderProps) {
 
 	const navItems = [
 		{ href: '#features', label: lang === 'en' ? 'Features' : '功能' },
-		{ href: '#sniper', label: lang === 'en' ? 'Sniper' : '狙击' },
+		{ href: '#ecosystem', label: lang === 'en' ? 'Ecosystem' : '生态' },
 		{ href: '#architecture', label: lang === 'en' ? 'Architecture' : '架构' },
 		{ href: '#dashboard', label: lang === 'en' ? 'Dashboard' : '仪表盘' },
 	];
@@ -74,7 +74,7 @@ export function Header({ lang, onLangChange }: HeaderProps) {
 				<div className="flex items-center gap-5">
 					<a href="#" className="hover:bg-accent rounded-md p-2">
 						<span className="text-xl font-bold bg-gradient-to-r from-blue-500 to-cyan-500 bg-clip-text text-transparent">
-							Sui DeFi Jarvis
+							NEXUS
 						</span>
 					</a>
 					<NavigationMenu className="hidden md:flex">
@@ -101,12 +101,12 @@ export function Header({ lang, onLangChange }: HeaderProps) {
 						{lang === 'en' ? '🇨🇳' : '🇬🇧'}
 					</Button>
 					<Button variant="outline" asChild>
-						<a href="https://t.me/SuiJarvisBot" target="_blank" rel="noopener noreferrer">
+						<a href="https://t.me/EVENexusBot" target="_blank" rel="noopener noreferrer">
 							{lang === 'en' ? 'Launch Bot' : '启动 Bot'}
 						</a>
 					</Button>
 					<Button asChild>
-						<a href="https://github.com/wrx1234/sui-hackathon" target="_blank" rel="noopener noreferrer">
+						<a href="https://github.com/CryptoMaN-Kamel/eve-frontier-hackathon" target="_blank" rel="noopener noreferrer">
 							GitHub
 						</a>
 					</Button>
@@ -147,12 +147,12 @@ export function Header({ lang, onLangChange }: HeaderProps) {
 						{lang === 'en' ? '🇨🇳 中文' : '🇬🇧 English'}
 					</Button>
 					<Button variant="outline" className="w-full bg-transparent" asChild>
-						<a href="https://t.me/SuiJarvisBot" target="_blank" rel="noopener noreferrer">
+						<a href="https://t.me/EVENexusBot" target="_blank" rel="noopener noreferrer">
 							{lang === 'en' ? 'Launch Bot' : '启动 Bot'}
 						</a>
 					</Button>
 					<Button className="w-full" asChild>
-						<a href="https://github.com/wrx1234/sui-hackathon" target="_blank" rel="noopener noreferrer">
+						<a href="https://github.com/CryptoMaN-Kamel/eve-frontier-hackathon" target="_blank" rel="noopener noreferrer">
 							GitHub
 						</a>
 					</Button>

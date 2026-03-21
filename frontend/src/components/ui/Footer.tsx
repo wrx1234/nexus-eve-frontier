@@ -1,10 +1,10 @@
 export function Footer() {
   const links = [
     { label: 'Features', href: '#features' },
-    { label: 'Social Sniper', href: '#sniper' },
-    { label: 'Bot', href: 'https://t.me/SuiJarvisBot' },
-    { label: 'Docs', href: 'https://docs.sui.io/' },
-    { label: 'GitHub', href: 'https://github.com/wrx1234/sui-hackathon' },
+    { label: 'Ecosystem', href: '#ecosystem' },
+    { label: 'Bot', href: 'https://t.me/EVENexusBot' },
+    { label: 'EVE Frontier', href: 'https://www.evefrontier.com/' },
+    { label: 'GitHub', href: 'https://github.com/CryptoMaN-Kamel/eve-frontier-hackathon' },
   ]
 
   return (
@@ -23,7 +23,7 @@ export function Footer() {
             </a>
           ))}
         </nav>
-        <p className="text-neutral-600 text-xs">© 2026 Sui DeFi Jarvis</p>
+        <p className="text-neutral-600 text-xs">EVE Frontier × Sui Hackathon 2026 · © 2026 NEXUS</p>
       </div>
     </footer>
   )
