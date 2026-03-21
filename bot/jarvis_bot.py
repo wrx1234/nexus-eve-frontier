@@ -9,7 +9,7 @@ Tech Stack: Sui × Walrus × EVE Frontier
 
 import json, os, time, logging, requests, hashlib, random, re, sys
 from datetime import datetime, timezone, timedelta
-from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, BotCommand
 from telegram.ext import (
     Application, CommandHandler, CallbackQueryHandler,
     MessageHandler, filters, ContextTypes
@@ -350,14 +350,26 @@ async def cmd_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     if lang == "cn":
         text = (
-            f"🤖 *NEXUS Assembly Manager*\n"
-            f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n"
-            f"欢迎回来, *{name}*! 👋\n\n"
-            f"🔧 *技术栈:*\n"
-            f"├ 🌊 *Sui* - Layer 1 区块链\n"
-            f"├ 🐘 *Walrus* - 去中心化日志存储\n"
-            f"├ 🌌 *EVE Frontier* - Smart Assembly\n"
-            f"└ 🤖 *NEXUS AI* - 智能管理引擎\n\n"
+            f"🤖 *欢迎使用 NEXUS!*\n"
+            f"Neural EXecutive for Unified Stations\n\n"
+            f"你的 24/7 AI 管家，管理 EVE Frontier Smart Assembly。\n\n"
+            f"━━━━━━━━━━━━━━━━━━━━━\n\n"
+            f"🎮 *什么是 EVE Frontier?*\n"
+            f"一款太空生存 MMO，玩家在 Sui 区块链上的共享宇宙中建设和管理基础设施。\n\n"
+            f"🏗️ *什么是 Smart Assembly?*\n"
+            f"你的太空帝国的基础组件:\n"
+            f"  🚪 Smart Gate - 星系间传送门。设置过路费、白名单和准入规则。\n"
+            f"  📦 Smart Storage - 太空仓库。存储和交易资源。\n"
+            f"  🔫 Smart Turret - 防御系统，保护领地免受敌人攻击。\n"
+            f"  ⚡ Network Node - 为所有 Assembly 供电。\n\n"
+            f"🤖 *NEXUS 能做什么?*\n"
+            f"NEXUS 是你的 AI 管家，24/7 监控和管理所有 Assembly:\n"
+            f"  - 自动补充燃料，防止耗尽\n"
+            f"  - 以最优价格交易资源\n"
+            f"  - 遭到攻击时立即告警\n"
+            f"  - 动态管理 Gate 通行费\n"
+            f"  - 每个决策都记录到 Walrus (不可篡改)\n\n"
+            f"━━━━━━━━━━━━━━━━━━━━━\n\n"
             f"💰 *钱包已就绪:*\n"
             f"📍 `{addr_short}`\n"
             f"余额: *{balance['formatted']}*\n\n"
@@ -365,18 +377,38 @@ async def cmd_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
             f"  🏗️ 总数: {len(assemblies)} | 🟢 在线: {online_count}\n"
             f"  💰 24h 收益: {total_rev:.1f} SUI\n"
             f"  {'⚠️ ' + str(fuel_alerts) + ' 个 Assembly 需要加油!' if fuel_alerts > 0 else '✅ 所有燃料正常'}\n\n"
+            f"━━━━━━━━━━━━━━━━━━━━━\n\n"
+            f"*快速开始:*\n"
+            f"📊 /status - 查看 Assembly 面板\n"
+            f"⛽ /fuel - 管理燃料\n"
+            f"🚪 /gate - 配置 Gate 规则\n"
+            f"🔔 /alert - 设置告警\n"
+            f"💰 /wallet - 管理 Sui 钱包\n"
+            f"❓ /help - 完整命令列表\n\n"
             f"👇 *选择操作:*"
         )
     else:
         text = (
-            f"🤖 *NEXUS Assembly Manager*\n"
-            f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n"
-            f"Welcome back, *{name}*! 👋\n\n"
-            f"🔧 *Tech Stack:*\n"
-            f"├ 🌊 *Sui* - Layer 1 Blockchain\n"
-            f"├ 🐘 *Walrus* - Decentralized Log Storage\n"
-            f"├ 🌌 *EVE Frontier* - Smart Assemblies\n"
-            f"└ 🤖 *NEXUS AI* - Intelligent Management Engine\n\n"
+            f"🤖 *Welcome to NEXUS!*\n"
+            f"Neural EXecutive for Unified Stations\n\n"
+            f"Your 24/7 AI manager for EVE Frontier Smart Assemblies.\n\n"
+            f"━━━━━━━━━━━━━━━━━━━━━\n\n"
+            f"🎮 *What is EVE Frontier?*\n"
+            f"A space survival MMO where players build and manage infrastructure in a shared universe on the Sui blockchain.\n\n"
+            f"🏗️ *What are Smart Assemblies?*\n"
+            f"The building blocks of your space empire:\n"
+            f"  🚪 Smart Gate - Teleportation portals between star systems. Set tolls, whitelists, and access rules.\n"
+            f"  📦 Smart Storage - Your warehouse in space. Store and trade resources with other players.\n"
+            f"  🔫 Smart Turret - Defense systems that protect your territory from enemies.\n"
+            f"  ⚡ Network Node - Power supply for all your assemblies.\n\n"
+            f"🤖 *What does NEXUS do?*\n"
+            f"NEXUS is your AI manager that monitors and controls all your assemblies 24/7:\n"
+            f"  - Auto-refuel before depletion\n"
+            f"  - Trade resources at optimal prices\n"
+            f"  - Alert you when under attack\n"
+            f"  - Manage gate tolls dynamically\n"
+            f"  - Log every decision to Walrus (immutable)\n\n"
+            f"━━━━━━━━━━━━━━━━━━━━━\n\n"
             f"💰 *Wallet Ready:*\n"
             f"📍 `{addr_short}`\n"
             f"Balance: *{balance['formatted']}*\n\n"
@@ -384,6 +416,14 @@ async def cmd_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
             f"  🏗️ Total: {len(assemblies)} | 🟢 Online: {online_count}\n"
             f"  💰 24h Revenue: {total_rev:.1f} SUI\n"
             f"  {'⚠️ ' + str(fuel_alerts) + ' assembly needs refuel!' if fuel_alerts > 0 else '✅ All fuel levels normal'}\n\n"
+            f"━━━━━━━━━━━━━━━━━━━━━\n\n"
+            f"*Quick Start:*\n"
+            f"📊 /status - View your Assembly dashboard\n"
+            f"⛽ /fuel - Manage fuel levels\n"
+            f"🚪 /gate - Configure gate rules\n"
+            f"🔔 /alert - Set up alerts\n"
+            f"💰 /wallet - Manage your Sui wallet\n"
+            f"❓ /help - Full command list\n\n"
             f"👇 *Choose an action:*"
         )
 
@@ -976,66 +1016,52 @@ async def cmd_help(update: Update, context):
 
     if lang == "cn":
         text = (
-            f"📖 *NEXUS Assembly Manager - 帮助*\n"
+            f"❓ *NEXUS 帮助*\n"
             f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n"
-            f"*📱 命令:*\n"
-            f"├ /start - 主菜单\n"
-            f"├ /status - Assembly 状态仪表盘\n"
-            f"├ /fuel - 燃料管理\n"
-            f"├ /gate - Gate 通行管理\n"
-            f"├ /alert - 告警配置\n"
-            f"├ /wallet - 钱包信息\n"
-            f"├ /balance - 查看余额\n"
-            f"├ /logs - 操作日志 (Walrus)\n"
-            f"├ /whale - 鲸鱼 Assembly 追踪\n"
-            f"├ /share - 分享周报\n"
-            f"├ /refer - 邀请好友\n"
-            f"├ /vote - 社区投票\n"
-            f"├ /lang - 切换语言\n"
-            f"└ /help - 帮助\n\n"
-            f"*🏗️ 支持的 Assembly 类型:*\n"
-            f"  🚪 Smart Gate - 星门管理\n"
-            f"  📦 Smart Storage - 存储单元\n"
-            f"  🔫 Smart Turret - 防御炮塔\n\n"
-            f"*🔧 技术架构:*\n"
-            f"  🌊 Sui - 链上结算\n"
-            f"  🐘 Walrus - 去中心化日志\n"
-            f"  🌌 EVE Frontier - Smart Assembly\n"
-            f"  🤖 NEXUS AI - 智能管理引擎\n\n"
-            f"_Powered by NEXUS × Sui × Walrus × EVE Frontier_"
+            f"📊 *Assembly 管理*\n"
+            f"  /status - Assembly 状态面板\n"
+            f"  /fuel - 燃料管理\n"
+            f"  /gate - Gate 门禁管理\n"
+            f"  /alert - 告警配置\n\n"
+            f"💰 *钱包 & 交易*\n"
+            f"  /wallet - 钱包信息\n"
+            f"  /balance - 快速余额查询\n\n"
+            f"📤 *社交 & 增长*\n"
+            f"  /share - 周报卡片\n"
+            f"  /refer - 邀请好友\n"
+            f"  /vote - 为 NEXUS 投票\n\n"
+            f"⚙️ *设置*\n"
+            f"  /lang - 语言切换\n"
+            f"  /help - 本帮助页面\n\n"
+            f"🌐 *链接*\n"
+            f"  Website: nexus.w3xuan.xyz\n"
+            f"  GitHub: github.com/wrx1234/sui-hackathon"
         )
     else:
         text = (
-            f"📖 *NEXUS Assembly Manager - Help*\n"
+            f"❓ *NEXUS Help*\n"
             f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n"
-            f"*📱 Commands:*\n"
-            f"├ /start - Main Menu\n"
-            f"├ /status - Assembly Dashboard\n"
-            f"├ /fuel - Fuel Management\n"
-            f"├ /gate - Gate Access Control\n"
-            f"├ /alert - Alert Configuration\n"
-            f"├ /wallet - Wallet Info\n"
-            f"├ /balance - Check Balance\n"
-            f"├ /logs - Operation Logs (Walrus)\n"
-            f"├ /whale - Whale Assembly Tracker\n"
-            f"├ /share - Share Weekly Report\n"
-            f"├ /refer - Invite Friends\n"
-            f"├ /vote - Community Voting\n"
-            f"├ /lang - Switch Language\n"
-            f"└ /help - Help\n\n"
-            f"*🏗️ Supported Assembly Types:*\n"
-            f"  🚪 Smart Gate - Star Gate Management\n"
-            f"  📦 Smart Storage - Storage Unit\n"
-            f"  🔫 Smart Turret - Defense Turret\n\n"
-            f"*🔧 Tech Stack:*\n"
-            f"  🌊 Sui - On-chain Settlement\n"
-            f"  🐘 Walrus - Decentralized Logs\n"
-            f"  🌌 EVE Frontier - Smart Assemblies\n"
-            f"  🤖 NEXUS AI - Intelligent Management\n\n"
-            f"_Powered by NEXUS × Sui × Walrus × EVE Frontier_"
+            f"📊 *Assembly Management*\n"
+            f"  /status - Assembly dashboard\n"
+            f"  /fuel - Fuel management\n"
+            f"  /gate - Gate control\n"
+            f"  /alert - Alert settings\n\n"
+            f"💰 *Wallet & Trading*\n"
+            f"  /wallet - Wallet info\n"
+            f"  /balance - Quick balance\n\n"
+            f"📤 *Social & Growth*\n"
+            f"  /share - Weekly report card\n"
+            f"  /refer - Invite friends\n"
+            f"  /vote - Vote for NEXUS\n\n"
+            f"⚙️ *Settings*\n"
+            f"  /lang - Language\n"
+            f"  /help - This help page\n\n"
+            f"🌐 *Links*\n"
+            f"  Website: nexus.w3xuan.xyz\n"
+            f"  GitHub: github.com/wrx1234/sui-hackathon"
         )
 
-    await update.message.reply_text(text, parse_mode="Markdown")
+    await update.message.reply_text(text, parse_mode="Markdown", disable_web_page_preview=True)
 
 
 # ==================== 回调处理器 ====================
@@ -1369,6 +1395,22 @@ async def nl_handler(update: Update, context):
 
 
 # ==================== 启动 ====================
+async def post_init(application):
+    """Bot 启动后设置命令菜单"""
+    commands = [
+        BotCommand("start", "🏠 Home / 首页"),
+        BotCommand("status", "📊 Assembly Dashboard / 状态面板"),
+        BotCommand("fuel", "⛽ Fuel Manager / 燃料管理"),
+        BotCommand("gate", "🚪 Gate Control / 门禁管理"),
+        BotCommand("alert", "🔔 Alert Settings / 告警设置"),
+        BotCommand("wallet", "💰 Wallet / 钱包"),
+        BotCommand("share", "📤 Share Card / 分享"),
+        BotCommand("help", "❓ Help / 帮助"),
+    ]
+    await application.bot.set_my_commands(commands)
+    log.info("✅ Bot commands menu set")
+
+
 def main():
     log.info("🤖 NEXUS Assembly Manager starting...")
 
@@ -1383,6 +1425,7 @@ def main():
            .token(TOKEN)
            .request(req)
            .get_updates_request(get_req)
+           .post_init(post_init)
            .build())
 
     # 核心命令
