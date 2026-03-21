@@ -1,128 +1,168 @@
-# 🤖 Sui DeFi Jarvis — The Infinite Money Glitch
+# 🚀 EVE Frontier AI Commander
 
-> An autonomous AI Agent running on OpenClaw that manages DeFi assets on Sui, aiming to be self-sustaining: earning more than it costs to run.
+> An autonomous AI Agent running on OpenClaw that manages Smart Assemblies in EVE Frontier - Gates, Storage Units, Turrets, and Network Nodes.
 
-**Track**: Mission OpenClaw — Local God Mode 🤖
-**Also competing in**: Sui Vibe Hackathon 2026
+**Built for**: EVE Frontier Hackathon
+**Powered by**: OpenClaw 🦞 + Sui 🌊 + EVE Frontier 🌌
 
-## 🌊 What is this?
+## 🌌 What is this?
 
-Sui DeFi Jarvis is a fully autonomous AI agent that:
-- **Earns** — Executes DeFi strategies on Sui (swap, LP, yield farming) via Cetus
-- **Thinks** — AI-powered market analysis and strategy optimization
-- **Records** — Every decision and trade logged immutably on Walrus
-- **Protects** — Risk management with configurable limits and Seal encryption
-- **Communicates** — Interact via Telegram Bot (@sui_kol_bot)
+EVE Frontier AI Commander is a fully autonomous AI agent that:
+- **🚪 Controls Gates** - AI-driven jump permit rules (tribe filtering, allowlists, time-based access)
+- **📦 Manages Storage** - Automated trading stations with custom deposit/withdraw logic
+- **🔫 Optimizes Turrets** - AI-powered target priority for defense turrets
+- **⚡ Monitors Infrastructure** - Network Node fuel/energy tracking with alerts
+- **🕵️ Gathers Intelligence** - Real-time analysis of jump traffic, threats, and market trends
 
-## 🔗 Sui Stack Integration
+## 🔗 Tech Stack
 
-### 🐋 Cetus (DEX & Aggregator)
-Cetus Aggregator SDK powers the trading engine, finding optimal swap routes across multiple DEXes on Sui. The agent automatically:
-- Discovers best swap paths for any token pair
-- Provides/removes liquidity to earn trading fees
-- Monitors price movements for arbitrage opportunities
+### EVE Frontier World Contracts
+The agent interacts with the on-chain EVE Frontier world:
+- `world::gate` - Smart Gates with programmable jump rules
+- `world::storage_unit` - Programmable Storage Units with extension logic
+- `world::turret` - Smart Turrets with custom targeting
+- `world::network_node` - Energy infrastructure management
 
-### 🐘 Walrus (Decentralized Storage)
-Every action the agent takes is transparently recorded on Walrus:
-- Trade execution logs with full reasoning
-- Strategy snapshots at regular intervals
-- Performance reports accessible to anyone
-- **Why**: Creates an immutable audit trail — if the agent goes rogue, every step is traceable
+### Custom Move Extensions
+- `eve_commander::config` - Shared configuration with dynamic fields
+- `eve_commander::gate_commander` - AI-driven gate access control with multi-rule support
+  - Tribe filtering
+  - Allowlist mode
+  - Time-based access control
+  - Traffic statistics & denial events for AI analysis
 
-### 🔐 Seal (Secrets Management)
-Sensitive data is protected using Sui's native encryption:
-- Agent wallet keys encrypted at rest
-- Trading strategy details encrypted to prevent front-running
-- Sui-based access control for decryption
+### AI + OpenClaw
+- **Commander Strategy Loop** - Periodic analysis of assembly status, traffic, threats
+- **Intelligence Module** - Analyzes on-chain events (JumpEvent, AccessDenied) for patterns
+- **Walrus Logging** - Every AI decision immutably recorded on Walrus
 
-### 🦞 OpenClaw (Agent Framework)
-The brain of the operation:
-- Persistent memory across sessions
-- Proactive heartbeat — agent acts without being prompted
-- Skill system for modular capability extension
-- Native Telegram integration
-
-### 📱 Moltbook (Agent Social Network)
-Social intelligence layer:
-- Fetches market alpha from agent community
-- Publishes trading reports and performance updates
-- Cross-agent information exchange
-
-## 🏗️ Architecture
-
-```
-User (Telegram @sui_kol_bot)
-         │
-    TG Bot Layer
-         │
-    AI Agent Core ─── OpenClaw Runtime
-    ├── DeFi Engine ──── Cetus Aggregator
-    ├── Risk Manager ─── Seal Encryption
-    ├── Strategy AI ──── Market Analysis
-    └── Walrus Logger ── Immutable Audit Trail
-         │
-    Sui Blockchain
-```
-
-## 💡 Inspired by Base Ecosystem
-
-This project takes patterns validated in the Base OpenClaw ecosystem and builds them as a unified system on Sui:
-
-| Base Project | Validated Pattern | Our Sui Implementation |
-|---|---|---|
-| Clanker ($7.48B vol) | Agent token economics | Automated trading & market making |
-| ClawMart (x402) | Agent API marketplace | Agent pays for data services with SUI |
-| Bankr | Agent wallet management | Full DeFi portfolio management |
-| Moltbook | Agent social network | Intelligence gathering + reporting |
-
-**Key differentiator**: Base projects are single-purpose tools. We build a **full-cycle autonomous agent** — from intelligence → decision → execution → recording → analysis.
-
-## 🚀 Quick Start
-
-```bash
-# Clone
-git clone https://github.com/wrx1234/sui-hackathon.git
-cd sui-hackathon
-
-# Setup (coming soon)
-./scripts/setup.sh
-
-# Run the agent
-python agent/main.py
-```
-
-## 📊 AI Usage Disclosure (Required by Hackathon Rules)
-
-This project is developed with significant AI assistance. Full transparency:
-
-| Tool | Model | Usage |
-|------|-------|-------|
-| **OpenClaw** v2026.2.6-3 | Claude Opus 4.6 | Agent framework, code gen, docs, deployment |
-| **Claude Code** | Claude Opus 4.6 | CLI code editing & debugging |
-
-- 📝 All AI interactions logged in `ai-logs/prompts.jsonl`
-- 📄 Full disclosure: [`AI_DISCLOSURE.md`](./AI_DISCLOSURE.md)
-- 🔑 Key prompts documented per hackathon requirement
-- ~80% code AI-generated, human-directed architecture & decisions
+### Data Access
+- **Sui GraphQL API** - Query assemblies, characters, objects by type
+- **suix_queryEvents** - Monitor JumpEvents, inventory changes, killmails
+- **@evefrontier/dapp-kit** - Assembly queries and transformation helpers
 
 ## 📁 Project Structure
 
 ```
-├── contracts/       # Move smart contracts (vault, strategy, logger)
-├── agent/           # AI Agent core (DeFi engine, risk, strategy)
-├── bot/             # Telegram Bot
-├── frontend/        # Web dashboard
-├── scripts/         # Deploy & setup scripts
-├── tools/           # AI logger & utilities
-├── ai-logs/         # AI interaction records
-├── docs/            # Research & documentation
-├── ARCHITECTURE.md  # System design
-├── RESEARCH.md      # Hackathon research
-└── AI_DISCLOSURE.md # AI usage transparency
+eve-frontier-ai-commander/
+├── contracts/
+│   └── sources/
+│       ├── commander_config.move    # Shared config (AdminCap + CAuth)
+│       └── gate_commander.move      # Smart Gate AI extension
+├── agent/
+│   ├── main.ts                      # Entry point
+│   ├── wallet.ts                    # Sui wallet management
+│   ├── assembly.ts                  # Assembly CRUD operations
+│   ├── graphql.ts                   # Sui GraphQL queries
+│   ├── intelligence.ts              # Traffic & threat analysis
+│   ├── logger.ts                    # Walrus logging
+│   └── social.ts                    # Social/notification engine
+├── bot/
+│   └── main.ts                      # Telegram Bot
+├── frontend/
+│   └── src/                         # React Dashboard
+└── HACKATHON-PLAN.md               # Detailed transformation plan
 ```
 
-## 📜 License
+## 🚀 Quick Start
+
+```bash
+# 1. Install dependencies
+npm install
+
+# 2. Configure environment
+cp .env.example .env
+# Edit .env with your keys:
+#   SUI_PRIVATE_KEY=suiprivkey1...
+#   SUI_NETWORK=testnet
+#   WORLD_PACKAGE_ID=0x...
+#   COMMANDER_PACKAGE_ID=0x...
+
+# 3. Start the Commander
+npm start
+
+# 4. Or start the Telegram Bot
+npm run bot
+```
+
+## 🔧 Environment Variables
+
+| Variable | Description |
+|----------|------------|
+| `SUI_PRIVATE_KEY` | Sui wallet private key (bech32 format) |
+| `SUI_NETWORK` | Network: testnet / mainnet / devnet |
+| `WORLD_PACKAGE_ID` | EVE Frontier world contracts package ID |
+| `COMMANDER_PACKAGE_ID` | Deployed eve_commander package ID |
+| `TELEGRAM_BOT_TOKEN` | Telegram Bot API token |
+| `WALRUS_PUBLISHER` | Walrus publisher endpoint |
+
+## 📊 Telegram Bot Commands
+
+| Command | Description |
+|---------|-------------|
+| `/start` | Welcome + wallet connection |
+| `/status` | Assembly overview (all types) |
+| `/gate` | Gate management (traffic, rules) |
+| `/storage` | Storage Unit management |
+| `/defense` | Turret defense strategy |
+| `/intel` | Intelligence report |
+| `/fuel` | Network Node fuel status |
+| `/config` | Configuration management |
+| `/alert` | Alert settings |
+
+## 🏗️ Architecture
+
+```
+┌──────────────────────────────────────────────┐
+│                 Telegram Bot                   │
+│            EVE Commander Bot                   │
+└──────────────────┬───────────────────────────┘
+                   │
+┌──────────────────▼───────────────────────────┐
+│           AI Commander Core                    │
+│  ┌───────────┐ ┌───────────┐ ┌───────────┐  │
+│  │ Assembly  │ │  Intel    │ │  Defense   │  │
+│  │ Manager   │ │  Analyst  │ │  Strategy  │  │
+│  └─────┬─────┘ └─────┬─────┘ └─────┬─────┘  │
+│        │             │             │          │
+│  ┌─────▼─────────────▼─────────────▼─────┐   │
+│  │        Sui Chain Interface             │   │
+│  │  GraphQL + Events + Move Calls         │   │
+│  └────────────────┬──────────────────────┘   │
+└───────────────────┼──────────────────────────┘
+                    │
+      ┌─────────────┼─────────────┐
+      ▼             ▼             ▼
+┌──────────┐ ┌──────────┐ ┌──────────┐
+│ Sui Chain│ │   EVE    │ │  Walrus  │
+│(Move TX) │ │ World    │ │ (Logs)   │
+│          │ │Contracts │ │          │
+└──────────┘ └──────────┘ └──────────┘
+```
+
+## 🛡️ Smart Gate Extension
+
+The `gate_commander.move` extension supports multiple composable rules:
+
+1. **Tribe Rule** - Allow only specific tribes
+2. **Allowlist Rule** - Whitelist approved tribes
+3. **Time Rule** - Open/close gate by time period
+4. **Statistics** - Track permits issued and denials on-chain
+
+All events are emitted for the AI agent to analyze:
+- `PermitIssuedEvent` - Successful gate passage (traffic analysis)
+- `AccessDeniedEvent` - Denied attempts (threat detection)
+- `ConfigUpdatedEvent` - Rule changes
+
+## 📝 AI Disclosure
+
+This project uses AI assistance (Claude via OpenClaw) for:
+- Code generation and architecture design
+- Strategy analysis and decision-making
+- Natural language interaction via Telegram
+
+All AI decisions are logged to Walrus for full transparency and auditability.
+
+## License
 
 MIT
-
-## 🌊🦞 Built with Sui + OpenClaw

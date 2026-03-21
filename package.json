@@ -1,19 +1,21 @@
 {
-  "name": "sui-defi-jarvis",
+  "name": "eve-frontier-ai-commander",
   "version": "0.1.0",
-  "description": "Autonomous AI DeFi Agent on Sui - The Infinite Money Glitch",
+  "description": "Autonomous AI Agent for managing EVE Frontier Smart Assemblies - Gates, Storage Units, Turrets",
   "type": "module",
   "scripts": {
     "start": "tsx agent/main.ts",
     "bot": "tsx bot/main.ts",
-    "test": "tsx scripts/test-swap.ts"
+    "test:graphql": "tsx agent/graphql.ts",
+    "test:assembly": "tsx agent/assembly.ts",
+    "test:intel": "tsx agent/intelligence.ts",
+    "test:wallet": "tsx agent/wallet.ts"
   },
   "dependencies": {
-    "@cetusprotocol/aggregator-sdk": "latest",
+    "@evefrontier/dapp-kit": "latest",
     "@mysten/sui": "latest",
     "dotenv": "latest",
-    "grammy": "latest",
-    "undici": "^7.21.0"
+    "grammy": "latest"
   },
   "devDependencies": {
     "@types/node": "latest",
