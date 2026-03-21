@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NEXUS - Style B: Neon Cyber</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    width: 100vw; height: 100vh; overflow: hidden;
+    font-family: 'DM Sans', sans-serif;
+    background: #000;
+    display: flex; align-items: center; justify-content: center;
+    color: #fff;
+  }
+
+  /* Grid background */
+  .grid {
+    position: fixed; inset: 0; z-index: 0;
+    background-image:
+      linear-gradient(rgba(0,212,255,0.06) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,212,255,0.06) 1px, transparent 1px);
+    background-size: 60px 60px;
+    mask-image: radial-gradient(ellipse at center, black 30%, transparent 75%);
+    -webkit-mask-image: radial-gradient(ellipse at center, black 30%, transparent 75%);
+  }
+
+  /* Scan line */
+  .scanline {
+    position: fixed; left: 0; width: 100%; height: 2px; z-index: 2;
+    background: linear-gradient(90deg, transparent, #00d4ff, #ff00ff, transparent);
+    opacity: .6;
+    animation: scan 4s linear infinite;
+  }
+  @keyframes scan { from { top: -2px; } to { top: 100vh; } }
+
+  /* Neon border lines */
+  .neon-line {
+    position: fixed; z-index: 1;
+  }
+  .neon-line.top { top: 40px; left: 10%; right: 10%; height: 1px;
+    background: linear-gradient(90deg, transparent, #00d4ff, transparent);
+    animation: breathe 3s ease-in-out infinite; }
+  .neon-line.bottom { bottom: 40px; left: 10%; right: 10%; height: 1px;
+    background: linear-gradient(90deg, transparent, #ff00ff, transparent);
+    animation: breathe 3s ease-in-out infinite 1.5s; }
+  .neon-line.left { left: 40px; top: 10%; bottom: 10%; width: 1px;
+    background: linear-gradient(transparent, #00d4ff, transparent);
+    animation: breathe 3s ease-in-out infinite .75s; }
+  .neon-line.right { right: 40px; top: 10%; bottom: 10%; width: 1px;
+    background: linear-gradient(transparent, #ff00ff, transparent);
+    animation: breathe 3s ease-in-out infinite 2.25s; }
+  @keyframes breathe { 0%,100% { opacity: .3; } 50% { opacity: 1; } }
+
+  /* Corner markers */
+  .corner { position: fixed; width: 20px; height: 20px; z-index: 2; }
+  .corner.tl { top: 34px; left: calc(10% - 6px); border-top: 2px solid #00d4ff; border-left: 2px solid #00d4ff; }
+  .corner.tr { top: 34px; right: calc(10% - 6px); border-top: 2px solid #00d4ff; border-right: 2px solid #00d4ff; }
+  .corner.bl { bottom: 34px; left: calc(10% - 6px); border-bottom: 2px solid #ff00ff; border-left: 2px solid #ff00ff; }
+  .corner.br { bottom: 34px; right: calc(10% - 6px); border-bottom: 2px solid #ff00ff; border-right: 2px solid #ff00ff; }
+
+  .content {
+    position: relative; z-index: 3;
+    text-align: center;
+    max-width: 900px; width: 90%;
+  }
+
+  .tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px; letter-spacing: 2px;
+    color: #ff00ff;
+    margin-bottom: 24px;
+    opacity: .8;
+  }
+  .tag::before { content: '> '; color: #00d4ff; }
+
+  h1 {
+    font-size: 120px; font-weight: 900; letter-spacing: 16px; line-height: 1;
+    color: transparent;
+    -webkit-text-stroke: 2px #00d4ff;
+    position: relative;
+    margin-bottom: 8px;
+    animation: titleGlow 3s ease-in-out infinite alternate;
+  }
+  h1::after {
+    content: 'NEXUS';
+    position: absolute; inset: 0;
+    -webkit-text-stroke: 0;
+    background: linear-gradient(180deg, #00d4ff, #ff00ff);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    opacity: 0;
+    animation: titleFill 3s ease-in-out infinite alternate;
+  }
+  @keyframes titleGlow {
+    from { text-shadow: 0 0 20px rgba(0,212,255,0.3); }
+    to { text-shadow: 0 0 60px rgba(0,212,255,0.6), 0 0 120px rgba(255,0,255,0.2); }
+  }
+  @keyframes titleFill {
+    from { opacity: 0; } to { opacity: .6; }
+  }
+
+  .subtitle {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px; letter-spacing: 4px; text-transform: uppercase;
+    color: rgba(255,255,255,0.4);
+    margin-bottom: 40px;
+  }
+
+  .desc {
+    font-size: 22px; font-weight: 400;
+    color: rgba(255,255,255,0.6);
+    margin-bottom: 56px;
+  }
+  .desc em { font-style: normal; color: #00d4ff; }
+
+  .footer {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px; color: rgba(255,255,255,0.25); letter-spacing: 1px;
+  }
+  .footer .cyan { color: #00d4ff; }
+  .footer .magenta { color: #ff00ff; }
+
+  /* Blinking cursor */
+  .cursor { display: inline-block; width: 8px; height: 14px; background: #00d4ff;
+    vertical-align: middle; margin-left: 4px;
+    animation: blink .8s step-end infinite; }
+  @keyframes blink { 50% { opacity: 0; } }
+</style>
+</head>
+<body>
+  <div class="grid"></div>
+  <div class="scanline"></div>
+  <div class="neon-line top"></div>
+  <div class="neon-line bottom"></div>
+  <div class="neon-line left"></div>
+  <div class="neon-line right"></div>
+  <div class="corner tl"></div>
+  <div class="corner tr"></div>
+  <div class="corner bl"></div>
+  <div class="corner br"></div>
+
+  <div class="content">
+    <div class="tag">EVE Frontier × Sui Hackathon 2026</div>
+    <h1>NEXUS</h1>
+    <p class="subtitle">Neural EXecutive for Unified Stations</p>
+    <p class="desc">Your 24/7 <em>AI Assembly Manager</em> for EVE Frontier</p>
+    <div class="footer">
+      <span class="cyan">Built by Xuan</span> &nbsp;/&nbsp; <span class="magenta">Powered by AI</span>
+      <span class="cursor"></span>
+    </div>
+  </div>
+</body>
+</html>
