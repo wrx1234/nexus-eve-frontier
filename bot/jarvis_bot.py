@@ -9,7 +9,7 @@ Tech Stack: Sui × Walrus × EVE Frontier
 
 import json, os, time, logging, requests, hashlib, random, re, sys
 from datetime import datetime, timezone, timedelta
-from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, BotCommand
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, BotCommand, ReplyKeyboardMarkup, KeyboardButton
 from telegram.ext import (
     Application, CommandHandler, CallbackQueryHandler,
     MessageHandler, filters, ContextTypes
@@ -34,6 +34,17 @@ DATA_DIR = os.path.join(BOT_DIR, "data")
 os.makedirs(DATA_DIR, exist_ok=True)
 
 HK_TZ = timezone(timedelta(hours=8))
+
+# 持久底部键盘
+PERSISTENT_KEYBOARD = ReplyKeyboardMarkup(
+    [
+        [KeyboardButton("📊 状态面板"), KeyboardButton("⛽ 燃料管理")],
+        [KeyboardButton("🚪 门禁管理"), KeyboardButton("🔔 告警设置")],
+        [KeyboardButton("💰 钱包"), KeyboardButton("❓ 帮助")],
+    ],
+    resize_keyboard=True,
+    is_persistent=True,
+)
 
 # ==================== i18n 系统 ====================
 LANG_FILE = os.path.join(DATA_DIR, "lang_prefs.json")
@@ -427,7 +438,7 @@ async def cmd_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
             f"👇 *Choose an action:*"
         )
 
-    await update.message.reply_text(text, parse_mode="Markdown", reply_markup=main_keyboard(uid))
+    await update.message.reply_text(text, parse_mode="Markdown", reply_markup=PERSISTENT_KEYBOARD)
 
 
 async def cmd_status(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -1340,8 +1351,23 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 # ==================== 自然语言处理 ====================
 async def nl_handler(update: Update, context):
     text = update.message.text or ""
-    text_lower = text.lower().strip()
+    text_stripped = text.strip()
+    text_lower = text_stripped.lower()
     uid = str(update.effective_user.id)
+
+    # 持久键盘按钮匹配
+    if text_stripped == "📊 状态面板":
+        return await cmd_status(update, context)
+    elif text_stripped == "⛽ 燃料管理":
+        return await cmd_fuel(update, context)
+    elif text_stripped == "🚪 门禁管理":
+        return await cmd_gate(update, context)
+    elif text_stripped == "🔔 告警设置":
+        return await cmd_alert(update, context)
+    elif text_stripped == "💰 钱包":
+        return await cmd_wallet(update, context)
+    elif text_stripped == "❓ 帮助":
+        return await cmd_help(update, context)
 
     if any(k in text_lower for k in ["状态", "status", "dashboard", "assembly", "仪表"]):
         await cmd_status(update, context)
@@ -1391,7 +1417,7 @@ async def nl_handler(update: Update, context):
                 "• /help - Full Help\n\n"
                 "Or use buttons below 👇"
             )
-        await update.message.reply_text(_default, parse_mode="Markdown", reply_markup=main_keyboard(uid))
+        await update.message.reply_text(_default, parse_mode="Markdown", reply_markup=PERSISTENT_KEYBOARD)
 
 
 # ==================== 启动 ====================
