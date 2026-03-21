@@ -1,0 +1,1003 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NEXUS - AI Assembly Manager for EVE Frontier</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --bg-deep: #0a0e1a;
+    --bg-card: rgba(255,255,255,0.04);
+    --bg-card-hover: rgba(255,255,255,0.07);
+    --accent: #6c5ce7;
+    --accent2: #00cec9;
+    --accent3: #fd79a8;
+    --text: #e2e8f0;
+    --text-dim: #94a3b8;
+    --text-bright: #f8fafc;
+    --border: rgba(255,255,255,0.08);
+    --glow: rgba(108,92,231,0.3);
+  }
+
+  body {
+    font-family: 'Inter', -apple-system, sans-serif;
+    background: var(--bg-deep);
+    color: var(--text);
+    overflow: hidden;
+    height: 100vh;
+    width: 100vw;
+  }
+
+  .slide-container {
+    width: 100vw;
+    height: 100vh;
+    position: relative;
+  }
+
+  .slide {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%;
+    height: 100%;
+    display: none;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 60px 80px;
+    background: var(--bg-deep);
+    overflow: hidden;
+  }
+
+  .slide.active { display: flex; }
+
+  /* Stars background */
+  .slide::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background:
+      radial-gradient(1px 1px at 10% 20%, rgba(255,255,255,0.4), transparent),
+      radial-gradient(1px 1px at 30% 70%, rgba(255,255,255,0.3), transparent),
+      radial-gradient(1px 1px at 50% 10%, rgba(255,255,255,0.2), transparent),
+      radial-gradient(1px 1px at 70% 40%, rgba(255,255,255,0.35), transparent),
+      radial-gradient(1px 1px at 90% 80%, rgba(255,255,255,0.25), transparent),
+      radial-gradient(1px 1px at 15% 90%, rgba(255,255,255,0.3), transparent),
+      radial-gradient(1px 1px at 85% 15%, rgba(255,255,255,0.2), transparent),
+      radial-gradient(1px 1px at 45% 55%, rgba(255,255,255,0.15), transparent),
+      radial-gradient(1px 1px at 65% 85%, rgba(255,255,255,0.3), transparent),
+      radial-gradient(1px 1px at 25% 45%, rgba(255,255,255,0.2), transparent);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* Gradient orbs */
+  .slide::after {
+    content: '';
+    position: absolute;
+    top: -30%; right: -20%;
+    width: 600px; height: 600px;
+    background: radial-gradient(circle, rgba(108,92,231,0.08), transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .slide > * { position: relative; z-index: 1; }
+
+  .slide-content {
+    width: 100%;
+    max-width: 1200px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+  }
+
+  /* Typography */
+  h1 { font-size: 56px; font-weight: 800; letter-spacing: -1.5px; line-height: 1.1; }
+  h2 { font-size: 40px; font-weight: 700; letter-spacing: -1px; line-height: 1.2; margin-bottom: 8px; }
+  h3 { font-size: 24px; font-weight: 600; color: var(--accent2); margin-bottom: 4px; }
+  p { font-size: 18px; line-height: 1.6; color: var(--text-dim); }
+  .subtitle { font-size: 22px; color: var(--text-dim); font-weight: 300; }
+  .highlight { color: var(--accent); }
+  .highlight2 { color: var(--accent2); }
+  .highlight3 { color: var(--accent3); }
+
+  /* Tags */
+  .tag {
+    display: inline-block;
+    padding: 4px 14px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 500;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+    margin: 3px;
+  }
+  .tag.accent { border-color: var(--accent); color: var(--accent); background: rgba(108,92,231,0.1); }
+  .tag.teal { border-color: var(--accent2); color: var(--accent2); background: rgba(0,206,201,0.1); }
+  .tag.pink { border-color: var(--accent3); color: var(--accent3); background: rgba(253,121,168,0.1); }
+
+  /* Cards */
+  .card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px;
+  }
+  .card-grid {
+    display: grid;
+    gap: 16px;
+  }
+  .card-grid.cols-2 { grid-template-columns: 1fr 1fr; }
+  .card-grid.cols-3 { grid-template-columns: 1fr 1fr 1fr; }
+  .card-grid.cols-4 { grid-template-columns: 1fr 1fr 1fr 1fr; }
+
+  .card .emoji { font-size: 32px; margin-bottom: 8px; display: block; }
+  .card h4 { font-size: 16px; font-weight: 600; color: var(--text-bright); margin-bottom: 6px; }
+  .card p { font-size: 14px; line-height: 1.5; }
+
+  /* Feature row */
+  .feature-row {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 14px 20px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+  }
+  .feature-row .emoji { font-size: 28px; flex-shrink: 0; }
+  .feature-row .label { font-weight: 600; font-size: 16px; color: var(--text-bright); min-width: 160px; }
+  .feature-row .desc { font-size: 14px; color: var(--text-dim); }
+
+  /* Architecture */
+  .arch-layer {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 16px 24px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+  }
+  .arch-layer .layer-icon { font-size: 28px; flex-shrink: 0; }
+  .arch-layer .layer-name {
+    font-weight: 700;
+    font-size: 16px;
+    color: var(--text-bright);
+    min-width: 140px;
+  }
+  .arch-layer .layer-desc { font-size: 13px; color: var(--text-dim); flex: 1; }
+  .arch-arrow { text-align: center; font-size: 20px; color: var(--accent); padding: 2px 0; }
+
+  /* Progress bar */
+  .progress-bar {
+    background: rgba(255,255,255,0.06);
+    border-radius: 8px;
+    height: 28px;
+    overflow: hidden;
+    position: relative;
+  }
+  .progress-bar .fill {
+    height: 100%;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    padding: 0 12px;
+    font-size: 12px;
+    font-weight: 600;
+    color: white;
+  }
+
+  /* Ecosystem node */
+  .eco-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 16px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-size: 13px;
+  }
+  .eco-item .eco-name { font-weight: 600; color: var(--text-bright); min-width: 140px; }
+  .eco-item .eco-desc { color: var(--text-dim); }
+
+  /* Timeline */
+  .timeline-item {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    padding: 8px 16px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-size: 13px;
+  }
+  .timeline-item .day {
+    font-weight: 700;
+    color: var(--accent2);
+    min-width: 70px;
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .timeline-item .task { color: var(--text); flex: 1; }
+  .timeline-item .output { color: var(--text-dim); font-size: 12px; }
+
+  /* Priority badge */
+  .priority {
+    display: inline-block;
+    padding: 2px 10px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 700;
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .priority.p0 { background: rgba(231,76,60,0.2); color: #e74c3c; border: 1px solid rgba(231,76,60,0.3); }
+  .priority.p1 { background: rgba(241,196,15,0.15); color: #f1c40f; border: 1px solid rgba(241,196,15,0.2); }
+  .priority.p2 { background: rgba(46,204,113,0.15); color: #2ecc71; border: 1px solid rgba(46,204,113,0.2); }
+
+  /* Slide counter */
+  .slide-counter {
+    position: fixed;
+    bottom: 24px;
+    right: 40px;
+    font-size: 14px;
+    color: var(--text-dim);
+    font-family: 'JetBrains Mono', monospace;
+    z-index: 100;
+  }
+
+  /* Nav hint */
+  .nav-hint {
+    position: fixed;
+    bottom: 24px;
+    left: 40px;
+    font-size: 12px;
+    color: rgba(255,255,255,0.2);
+    z-index: 100;
+  }
+
+  /* Cover special */
+  .cover-badge {
+    display: inline-block;
+    padding: 6px 20px;
+    border-radius: 24px;
+    font-size: 14px;
+    font-weight: 500;
+    background: rgba(108,92,231,0.15);
+    border: 1px solid rgba(108,92,231,0.3);
+    color: var(--accent);
+    margin-bottom: 16px;
+  }
+
+  .big-quote {
+    font-size: 24px;
+    font-style: italic;
+    color: var(--accent2);
+    font-weight: 300;
+    border-left: 3px solid var(--accent2);
+    padding-left: 20px;
+    margin: 12px 0;
+  }
+
+  /* Section divider line */
+  .divider {
+    width: 60px;
+    height: 3px;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    border-radius: 2px;
+    margin: 8px 0 16px;
+  }
+
+  /* Checklist */
+  .check-item {
+    font-size: 15px;
+    padding: 4px 0;
+    color: var(--text);
+  }
+  .check-item::before { content: '✅ '; }
+
+  /* Two column layout */
+  .two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 32px;
+    width: 100%;
+  }
+
+  /* CTA button style */
+  .cta-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 28px;
+    background: linear-gradient(135deg, var(--accent), #8b5cf6);
+    border-radius: 10px;
+    font-size: 16px;
+    font-weight: 600;
+    color: white;
+    text-decoration: none;
+    margin: 4px;
+  }
+
+  .cta-link.outline {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text);
+  }
+
+  /* Compact text */
+  .small { font-size: 13px; }
+  .mono { font-family: 'JetBrains Mono', monospace; }
+  .mt-8 { margin-top: 8px; }
+  .mt-16 { margin-top: 16px; }
+  .mb-8 { margin-bottom: 8px; }
+  .mb-16 { margin-bottom: 16px; }
+  .text-center { text-align: center; }
+  .flex-center { display: flex; justify-content: center; align-items: center; }
+  .gap-8 { gap: 8px; }
+  .gap-16 { gap: 16px; }
+  .flex-wrap { flex-wrap: wrap; }
+</style>
+</head>
+<body>
+
+<div class="slide-container">
+
+<!-- ==================== SLIDE 1: COVER ==================== -->
+<div class="slide active" id="slide-1">
+  <div class="slide-content" style="align-items: center; text-align: center;">
+    <div class="cover-badge">EVE Frontier × Sui Hackathon 2026</div>
+    <h1 style="font-size: 72px; background: linear-gradient(135deg, #6c5ce7, #00cec9); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
+      NEXUS
+    </h1>
+    <p style="font-size: 20px; font-weight: 400; color: var(--text-dim); letter-spacing: 3px; text-transform: uppercase; margin-top: -8px;">
+      Neural EXecutive for Unified Stations
+    </p>
+    <div class="divider" style="margin: 16px auto;"></div>
+    <p class="subtitle" style="font-size: 26px; max-width: 700px;">
+      Your 24/7 AI Assembly Manager<br>for EVE Frontier
+    </p>
+    <div style="margin-top: 32px; display: flex; gap: 12px; flex-wrap: wrap; justify-content: center;">
+      <span class="tag accent">AI-Powered</span>
+      <span class="tag teal">Telegram Bot</span>
+      <span class="tag pink">Move Contracts</span>
+      <span class="tag">Walrus Storage</span>
+    </div>
+    <p style="margin-top: 40px; font-size: 15px; color: var(--text-dim);">
+      Team: <strong style="color: var(--text-bright);">Xuan</strong> &nbsp;·&nbsp; 1-person + AI
+    </p>
+  </div>
+</div>
+
+<!-- ==================== SLIDE 2: THE PROBLEM ==================== -->
+<div class="slide" id="slide-2">
+  <div class="slide-content">
+    <h2>The Problem</h2>
+    <div class="divider"></div>
+    <p class="mb-16">Smart Assembly 是文明建设核心，但管理体验极其痛苦:</p>
+    <div class="card-grid cols-3">
+      <div class="card">
+        <span class="emoji">⛽</span>
+        <h4>Fuel Anxiety</h4>
+        <p>燃料耗尽 = 功能停摆，手动检查无法持续</p>
+      </div>
+      <div class="card">
+        <span class="emoji">🤯</span>
+        <h4>Multi-Assembly Hell</h4>
+        <p>Gate + Storage + Turret + Node，逐个检查不可扩展</p>
+      </div>
+      <div class="card">
+        <span class="emoji">📉</span>
+        <h4>Missed Trades</h4>
+        <p>离线时错过最优价格，交易时机稍纵即逝</p>
+      </div>
+      <div class="card">
+        <span class="emoji">🛡️</span>
+        <h4>Slow Defense</h4>
+        <p>Turret 遭受攻击时人不在线，无法及时响应</p>
+      </div>
+      <div class="card">
+        <span class="emoji">🔀</span>
+        <h4>Scattered Info</h4>
+        <p>状态、事件、价格散落各处，缺少统一视图</p>
+      </div>
+      <div class="card">
+        <span class="emoji">😴</span>
+        <h4>24/7 is Impossible</h4>
+        <p>人需要睡觉，但太空不会因此停止运转</p>
+      </div>
+    </div>
+    <div class="big-quote mt-16">
+      Assembly 需要持续管理，但玩家的注意力和在线时间是有限的。
+    </div>
+  </div>
+</div>
+
+<!-- ==================== SLIDE 3: OUR SOLUTION ==================== -->
+<div class="slide" id="slide-3">
+  <div class="slide-content" style="align-items: center; text-align: center;">
+    <h2>Our Solution</h2>
+    <div class="divider" style="margin: 8px auto 24px;"></div>
+    <div style="display: flex; gap: 20px; align-items: center; justify-content: center; margin-bottom: 24px;">
+      <div class="card" style="text-align: center; padding: 28px 36px;">
+        <span class="emoji">🤖</span>
+        <h4>AI Engine</h4>
+        <p>智能决策 + 策略引擎</p>
+      </div>
+      <span style="font-size: 28px; color: var(--accent);">+</span>
+      <div class="card" style="text-align: center; padding: 28px 36px;">
+        <span class="emoji">📱</span>
+        <h4>Telegram Bot</h4>
+        <p>随时随地指令交互</p>
+      </div>
+      <span style="font-size: 28px; color: var(--accent);">+</span>
+      <div class="card" style="text-align: center; padding: 28px 36px;">
+        <span class="emoji">📜</span>
+        <h4>Move Contracts</h4>
+        <p>链上安全 + 风控保障</p>
+      </div>
+    </div>
+    <div style="font-size: 48px; margin: 8px 0;">⬇️</div>
+    <div class="card" style="text-align: center; padding: 28px 48px; border-color: var(--accent); background: rgba(108,92,231,0.06);">
+      <span style="font-size: 40px; display: block; margin-bottom: 8px;">🛸</span>
+      <h4 style="font-size: 22px; color: var(--accent);">NEXUS</h4>
+      <p style="font-size: 16px;">24/7 AI Assembly Manager</p>
+    </div>
+    <div class="big-quote mt-16" style="border: none; text-align: center; padding: 0;">
+      "Your Assembly doesn't sleep. Neither does NEXUS."
+    </div>
+  </div>
+</div>
+
+<!-- ==================== SLIDE 4: CORE FEATURES (上) ==================== -->
+<div class="slide" id="slide-4">
+  <div class="slide-content">
+    <h2>Core Features <span style="font-size: 22px; color: var(--text-dim); font-weight: 400;">(1/2)</span></h2>
+    <div class="divider"></div>
+    <div style="display: flex; flex-direction: column; gap: 16px;">
+      <div class="feature-row">
+        <span class="emoji">📊</span>
+        <span class="label">Assembly Dashboard</span>
+        <span class="desc"><code style="color: var(--accent2);">/status</code> 一键查看所有 Assembly 的燃料、状态、收益汇总</span>
+      </div>
+      <div class="feature-row">
+        <span class="emoji">⛽</span>
+        <span class="label">Smart Fuel Management</span>
+        <span class="desc">监控燃料水位，低于阈值自动补充，支持自定义告警线</span>
+      </div>
+      <div class="feature-row">
+        <span class="emoji">💹</span>
+        <span class="label">Auto Trading</span>
+        <span class="desc">AI 策略引擎在 Storage Assembly 自动挂单/成交，捕捉最优价格</span>
+      </div>
+      <div class="feature-row">
+        <span class="emoji">🚨</span>
+        <span class="label">Defense Alert System</span>
+        <span class="desc">监听链上攻击事件，实时推送 Telegram 告警，建议防御调整</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== SLIDE 5: CORE FEATURES (下) ==================== -->
+<div class="slide" id="slide-5">
+  <div class="slide-content">
+    <h2>Core Features <span style="font-size: 22px; color: var(--text-dim); font-weight: 400;">(2/2)</span></h2>
+    <div class="divider"></div>
+    <div style="display: flex; flex-direction: column; gap: 16px;">
+      <div class="feature-row">
+        <span class="emoji">🚪</span>
+        <span class="label">Gate Management</span>
+        <span class="desc">智能设置 Gate 通行规则 - 白名单/黑名单/动态收费策略</span>
+      </div>
+      <div class="feature-row">
+        <span class="emoji">📈</span>
+        <span class="label">Revenue Tracking</span>
+        <span class="desc">每日/每周收益报告，含燃料成本、交易利润、通行费收入</span>
+      </div>
+      <div class="feature-row">
+        <span class="emoji">🐋</span>
+        <span class="label">Walrus Audit Logs</span>
+        <span class="desc">所有 AI 决策和执行记录上传 Walrus，不可篡改，完全可审计</span>
+      </div>
+      <div class="feature-row">
+        <span class="emoji">💬</span>
+        <span class="label">Natural Language Commands</span>
+        <span class="desc">"把 Gate 的通行费提高 20%" - 用自然语言管理你的 Assembly</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== SLIDE 6: TECHNICAL ARCHITECTURE ==================== -->
+<div class="slide" id="slide-6">
+  <div class="slide-content">
+    <h2>Technical Architecture</h2>
+    <div class="divider"></div>
+    <div style="display: flex; flex-direction: column; gap: 6px;">
+      <div class="arch-layer">
+        <span class="layer-icon">📱</span>
+        <span class="layer-name" style="color: var(--accent2);">Telegram Bot</span>
+        <span class="layer-desc">18+ 命令 · 50+ 回调 · 告警推送 · 自然语言解析</span>
+      </div>
+      <div class="arch-arrow">↕</div>
+      <div class="arch-layer">
+        <span class="layer-icon">🧠</span>
+        <span class="layer-name" style="color: var(--accent);">AI Decision Engine</span>
+        <span class="layer-desc">燃料策略 · 交易策略 · 防御策略 · Gate 动态定价</span>
+      </div>
+      <div class="arch-arrow">↕</div>
+      <div class="arch-layer">
+        <span class="layer-icon">📜</span>
+        <span class="layer-name" style="color: var(--accent3);">Move Contracts</span>
+        <span class="layer-desc">AssemblyManager · FuelBudget · TradeLimit · EmergencyBrake</span>
+      </div>
+      <div class="arch-arrow">↕</div>
+      <div class="arch-layer" style="border-color: rgba(108,92,231,0.2);">
+        <span class="layer-icon">⛓️</span>
+        <span class="layer-name" style="color: #74b9ff;">Sui Blockchain</span>
+        <span class="layer-desc">GraphQL 事件监听 · 状态查询 · 交易广播</span>
+      </div>
+      <div class="arch-arrow">↕</div>
+      <div class="arch-layer">
+        <span class="layer-icon">🐋</span>
+        <span class="layer-name" style="color: #55efc4;">Walrus Storage</span>
+        <span class="layer-desc">操作日志 · 审计记录 · 策略快照 · 不可篡改</span>
+      </div>
+    </div>
+    <div style="display: flex; gap: 8px; margin-top: 20px; flex-wrap: wrap;">
+      <span class="tag accent">Move</span>
+      <span class="tag teal">TypeScript</span>
+      <span class="tag pink">Sui</span>
+      <span class="tag">Walrus</span>
+      <span class="tag">Telegram API</span>
+      <span class="tag">EVE Frontier API</span>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== SLIDE 7: HACKATHON FIT ==================== -->
+<div class="slide" id="slide-7">
+  <div class="slide-content">
+    <h2>Hackathon Fit</h2>
+    <div class="divider"></div>
+    <h3 style="font-size: 28px; margin-bottom: 16px;">"A Toolkit for Civilization"</h3>
+    <div class="two-col">
+      <div>
+        <div class="card mb-16">
+          <h4 style="color: var(--accent); margin-bottom: 12px;">🏆 Primary: Utility Award ($5,000)</h4>
+          <p>纯粹的实用工具，解决真实玩家痛点。燃料管理、自动交易、防御预警 - 每个功能都直接提升游戏体验。不是概念 Demo，是可以真正用起来的产品。</p>
+        </div>
+        <div class="card">
+          <h4 style="color: var(--accent2); margin-bottom: 12px;">🎯 Secondary: Live Integration ($5,000)</h4>
+          <p>部署到 Stillness 测试网，连接真实 Assembly。Demo 展示实际运行效果，不是 PPT。</p>
+        </div>
+      </div>
+      <div>
+        <div class="card" style="height: 100%; display: flex; flex-direction: column; justify-content: center;">
+          <h4 style="margin-bottom: 16px;">Why AI Assembly Manager = Civilization Toolkit Core</h4>
+          <div style="display: flex; flex-direction: column; gap: 12px; font-size: 15px;">
+            <div>🏗️ 文明需要基础设施 → <strong style="color: var(--text-bright);">Smart Assembly 是基础设施</strong></div>
+            <div>🔧 基础设施需要管理 → <strong style="color: var(--text-bright);">NEXUS 提供 AI 自动化管理</strong></div>
+            <div>⚡ 好的管理工具让文明更高效 → <strong style="color: var(--text-bright);">从人工巡检到 AI 托管</strong></div>
+            <div style="margin-top: 8px; padding-top: 12px; border-top: 1px solid var(--border); color: var(--accent2); font-style: italic;">
+              真实文明的特征是自动化和专业分工
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== SLIDE 8: BUILT ON SUIJARVIS ==================== -->
+<div class="slide" id="slide-8">
+  <div class="slide-content">
+    <h2>Built on SuiJarvis</h2>
+    <div class="divider"></div>
+    <p class="mb-16" style="font-size: 20px;">不是从零开始 - 从成熟的 DeFi Agent 改造为 EVE Frontier Assembly Manager</p>
+    <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 24px;">
+      <div style="display: flex; align-items: center; gap: 16px;">
+        <span style="min-width: 200px; font-size: 14px; font-weight: 500;">Telegram Bot 框架</span>
+        <div class="progress-bar" style="flex: 1;">
+          <div class="fill" style="width: 90%; background: linear-gradient(90deg, var(--accent), #8b5cf6);">90%</div>
+        </div>
+      </div>
+      <div style="display: flex; align-items: center; gap: 16px;">
+        <span style="min-width: 200px; font-size: 14px; font-weight: 500;">Walrus 日志系统</span>
+        <div class="progress-bar" style="flex: 1;">
+          <div class="fill" style="width: 95%; background: linear-gradient(90deg, #55efc4, #00cec9);">95%</div>
+        </div>
+      </div>
+      <div style="display: flex; align-items: center; gap: 16px;">
+        <span style="min-width: 200px; font-size: 14px; font-weight: 500;">风控系统</span>
+        <div class="progress-bar" style="flex: 1;">
+          <div class="fill" style="width: 85%; background: linear-gradient(90deg, var(--accent3), #e17055);">85%</div>
+        </div>
+      </div>
+      <div style="display: flex; align-items: center; gap: 16px;">
+        <span style="min-width: 200px; font-size: 14px; font-weight: 500;">AI 策略引擎</span>
+        <div class="progress-bar" style="flex: 1;">
+          <div class="fill" style="width: 80%; background: linear-gradient(90deg, #fdcb6e, #f39c12);">80%</div>
+        </div>
+      </div>
+      <div style="display: flex; align-items: center; gap: 16px;">
+        <span style="min-width: 200px; font-size: 14px; font-weight: 500;">前端 Landing Page</span>
+        <div class="progress-bar" style="flex: 1;">
+          <div class="fill" style="width: 70%; background: linear-gradient(90deg, #74b9ff, #0984e3);">70%</div>
+        </div>
+      </div>
+      <div style="display: flex; align-items: center; gap: 16px;">
+        <span style="min-width: 200px; font-size: 14px; font-weight: 500;">Move 合约框架</span>
+        <div class="progress-bar" style="flex: 1;">
+          <div class="fill" style="width: 60%; background: linear-gradient(90deg, #a29bfe, #6c5ce7);">60%</div>
+        </div>
+      </div>
+    </div>
+    <div style="display: flex; gap: 20px; align-items: center; justify-content: center;">
+      <div class="card" style="text-align: center; padding: 16px 32px;">
+        <p style="font-size: 13px; color: var(--text-dim);">从零开始</p>
+        <div class="progress-bar" style="width: 200px; margin-top: 8px;">
+          <div class="fill" style="width: 0%; background: var(--accent);">&nbsp;</div>
+        </div>
+        <p style="font-size: 12px; color: var(--text-dim); margin-top: 4px;">0%</p>
+      </div>
+      <span style="font-size: 24px; color: var(--text-dim);">→</span>
+      <div class="card" style="text-align: center; padding: 16px 32px; border-color: var(--accent);">
+        <p style="font-size: 13px; color: var(--accent);">NEXUS 起点</p>
+        <div class="progress-bar" style="width: 200px; margin-top: 8px;">
+          <div class="fill" style="width: 60%; background: linear-gradient(90deg, var(--accent), var(--accent2));">~60%</div>
+        </div>
+        <p style="font-size: 12px; color: var(--accent2); margin-top: 4px;">已完成 ~60%</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== SLIDE 9: ECOSYSTEM ==================== -->
+<div class="slide" id="slide-9">
+  <div class="slide-content">
+    <h2>Ecosystem <span style="font-size: 20px; color: var(--text-dim); font-weight: 400;">- Powering Other Projects</span></h2>
+    <div class="divider"></div>
+    <p class="mb-16">NEXUS 是 EVE Frontier 生态的 AI 基础设施层，赋能其他项目:</p>
+    <div style="display: flex; flex-direction: column; gap: 8px;">
+      <div class="eco-item">
+        <span>🎯</span>
+        <span class="eco-name">Bounty Board</span>
+        <span class="eco-desc">NEXUS 监控 Gate 事件，自动追踪通缉目标经过时推送猎人</span>
+      </div>
+      <div class="eco-item">
+        <span>⛽</span>
+        <span class="eco-name">Star-Fuel Panic</span>
+        <span class="eco-desc">燃料管理 AI 对接能源调度系统，自动响应高额悬赏补给任务</span>
+      </div>
+      <div class="eco-item">
+        <span>🚚</span>
+        <span class="eco-name">Frontier Trade Routes</span>
+        <span class="eco-desc">Gate 流量监控数据输出，为物流路线优化提供实时情报</span>
+      </div>
+      <div class="eco-item">
+        <span>💱</span>
+        <span class="eco-name">EVE Buff Market</span>
+        <span class="eco-desc">Storage 自动交易作为 Buff Market 的自动化执行层</span>
+      </div>
+      <div class="eco-item">
+        <span>📚</span>
+        <span class="eco-name">DemoSay / EVE 101</span>
+        <span class="eco-desc">Bot 内嵌教程引导，帮新手一键配置首个 Assembly</span>
+      </div>
+      <div class="eco-item">
+        <span>👁️</span>
+        <span class="eco-name">eve eyes</span>
+        <span class="eco-desc">情报引擎共享监控数据，互为数据源，追踪链上大户位置</span>
+      </div>
+      <div class="eco-item">
+        <span>🧂</span>
+        <span class="eco-name">BrineVault</span>
+        <span class="eco-desc">实时 Assembly 监控数据 feed 给情报站</span>
+      </div>
+    </div>
+    <p class="mt-16 small" style="color: var(--accent2); text-align: center;">不是竞争关系，是赋能关系 - NEXUS 让整个生态更强 💪</p>
+  </div>
+</div>
+
+<!-- ==================== SLIDE 10: VIRAL GROWTH ==================== -->
+<div class="slide" id="slide-10">
+  <div class="slide-content">
+    <h2>Viral Growth Engine</h2>
+    <div class="divider"></div>
+    <p class="mb-16">社区投票增长引擎 - 5 个增长钩子:</p>
+    <div class="card-grid cols-3" style="grid-template-columns: 1fr 1fr 1fr;">
+      <div class="card">
+        <span class="emoji">🖼️</span>
+        <h4>Shareable Cards</h4>
+        <p>"我的 NEXUS 管家本周帮我省了 XX 燃料" - 自动生成分享卡片，自带 referral 链接</p>
+      </div>
+      <div class="card">
+        <span class="emoji">🔗</span>
+        <h4>Referral System</h4>
+        <p>邀请新用户 = 解锁高级功能，被邀请人收益 1% 返佣，链上透明</p>
+      </div>
+      <div class="card">
+        <span class="emoji">🗳️</span>
+        <h4>Vote Campaign</h4>
+        <p>/vote 一键投票，投票后获限定 NFT 徽章，"I Voted for NEXUS" 自动分享</p>
+      </div>
+    </div>
+    <div class="card-grid cols-2 mt-16">
+      <div class="card">
+        <span class="emoji">🌐</span>
+        <h4>Network Effects</h4>
+        <p>NEXUS 用户间 Gate 互通免费/打折，"邀请联盟成员用 NEXUS，大家费用全免"，用户增长 → 网络价值增长</p>
+      </div>
+      <div class="card">
+        <span class="emoji">🤖</span>
+        <h4>AI Social Ops</h4>
+        <p>复用 SuiJarvis social.ts 框架，自动发推 Assembly 里程碑事件，自动回复 EVE Frontier 话题</p>
+      </div>
+    </div>
+    <div style="text-align: center; margin-top: 20px; font-size: 14px; color: var(--text-dim);">
+      <span style="color: var(--accent2);">分享卡片</span> → <span style="color: var(--accent);">Referral</span> → <span style="color: var(--accent3);">Vote Campaign</span> → <span style="color: #fdcb6e;">网络效应</span> → <span style="color: #55efc4;">AI 社交</span> 🔄
+    </div>
+  </div>
+</div>
+
+<!-- ==================== SLIDE 11: CURRENT PROGRESS ==================== -->
+<div class="slide" id="slide-11">
+  <div class="slide-content">
+    <h2>Current Progress</h2>
+    <div class="divider"></div>
+    <div class="two-col">
+      <div>
+        <h3 style="margin-bottom: 12px;">✅ SuiJarvis Core (已完成)</h3>
+        <div style="display: flex; flex-direction: column; gap: 6px;">
+          <div class="check-item">Sui Move Vault 合约 (部署到测试网)</div>
+          <div class="check-item">AI 策略引擎 (趋势跟踪 + 均值回归)</div>
+          <div class="check-item">风控系统 (限额 + 熔断 + 异常检测)</div>
+          <div class="check-item">Telegram Bot (18 命令 + 50 回调)</div>
+          <div class="check-item">Walrus 去中心化日志</div>
+          <div class="check-item">React Landing Page (Spline 3D)</div>
+          <div class="check-item">GitHub 仓库完整可运行</div>
+        </div>
+      </div>
+      <div>
+        <h3 style="margin-bottom: 12px;">🔨 This Week (进行中)</h3>
+        <div style="display: flex; flex-direction: column; gap: 10px;">
+          <div class="card" style="padding: 14px 18px;">
+            <h4>3/21 (六)</h4>
+            <p>方案文档定稿 ✅</p>
+            <p>研究 EVE Frontier API</p>
+          </div>
+          <div class="card" style="padding: 14px 18px;">
+            <h4>3/22 (日)</h4>
+            <p>合约架构设计</p>
+            <p>基础 Demo 搭建</p>
+          </div>
+          <div class="card" style="padding: 14px 18px; border-color: var(--accent);">
+            <h4 style="color: var(--accent);">3/23-31</h4>
+            <p style="color: var(--accent2);">全力开发 → 提交 🚀</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== SLIDE 12: ROADMAP ==================== -->
+<div class="slide" id="slide-12">
+  <div class="slide-content">
+    <h2>Roadmap <span style="font-size: 20px; color: var(--text-dim); font-weight: 400;">(Next Week)</span></h2>
+    <div class="divider"></div>
+    <div style="display: flex; flex-direction: column; gap: 6px; margin-bottom: 20px;">
+      <div class="timeline-item">
+        <span class="day">Day 1</span>
+        <span class="task">EVE Frontier World API 对接</span>
+        <span class="output">API 封装层</span>
+        <span class="priority p0">P0</span>
+      </div>
+      <div class="timeline-item">
+        <span class="day">Day 2</span>
+        <span class="task">Move 合约改造: Vault → AssemblyManager</span>
+        <span class="output">合约部署</span>
+        <span class="priority p0">P0</span>
+      </div>
+      <div class="timeline-item">
+        <span class="day">Day 3</span>
+        <span class="task">Bot 命令改造: /status /fuel /gate /alert</span>
+        <span class="output">核心命令可用</span>
+        <span class="priority p0">P0</span>
+      </div>
+      <div class="timeline-item">
+        <span class="day">Day 4</span>
+        <span class="task">Assembly 状态监控 + 燃料预警</span>
+        <span class="output">自动告警</span>
+        <span class="priority p1">P1</span>
+      </div>
+      <div class="timeline-item">
+        <span class="day">Day 5</span>
+        <span class="task">AI 燃料管理策略 + 自动补充</span>
+        <span class="output">AI 自动补燃料</span>
+        <span class="priority p1">P1</span>
+      </div>
+      <div class="timeline-item">
+        <span class="day">Day 6</span>
+        <span class="task">AI 交易策略 + Gate 定价 + 生态接口</span>
+        <span class="output">自动交易</span>
+        <span class="priority p1">P1</span>
+      </div>
+      <div class="timeline-item">
+        <span class="day">Day 7</span>
+        <span class="task">前端改造 + 裂变功能</span>
+        <span class="output">Landing Page</span>
+        <span class="priority p2">P2</span>
+      </div>
+      <div class="timeline-item">
+        <span class="day">Day 8</span>
+        <span class="task">部署 Stillness 测试网 + E2E 测试</span>
+        <span class="output">全流程跑通</span>
+        <span class="priority p0">P0</span>
+      </div>
+      <div class="timeline-item">
+        <span class="day">Day 9</span>
+        <span class="task">Demo 视频录制 + 文档完善 + 提交</span>
+        <span class="output">最终提交 🏁</span>
+        <span class="priority p0">P0</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== SLIDE 13: TECH HIGHLIGHTS ==================== -->
+<div class="slide" id="slide-13">
+  <div class="slide-content">
+    <h2>Tech Highlights</h2>
+    <div class="divider"></div>
+    <div class="card-grid cols-2">
+      <div class="card">
+        <span class="emoji">🧠</span>
+        <h4>AI Decision Making</h4>
+        <p>燃料策略: 基于消耗速率预测耗尽时间<br>
+           交易策略: 趋势跟踪 + 均值回归<br>
+           防御策略: 动态调整 Turret 参数<br>
+           Gate 定价: 根据流量动态调整</p>
+      </div>
+      <div class="card">
+        <span class="emoji">🔐</span>
+        <h4>Move Contract Security</h4>
+        <p>FuelBudget: 每周燃料预算上限<br>
+           TradeLimit: 单笔/日累计交易限额<br>
+           EmergencyBrake: 一键冻结自动操作<br>
+           ManagerCap: 细粒度权限管理</p>
+      </div>
+      <div class="card">
+        <span class="emoji">🐋</span>
+        <h4>Walrus Audit Trail</h4>
+        <p>每次 AI 决策的完整上下文存储<br>
+           执行结果 + 策略参数快照<br>
+           不可篡改，支持事后审计<br>
+           "AI 为什么做了这个决策"</p>
+      </div>
+      <div class="card">
+        <span class="emoji">⚡</span>
+        <h4>Risk Control System</h4>
+        <p>限额检查 + 熔断机制<br>
+           异常检测 + 自动降级<br>
+           多签授权 + 委托执行<br>
+           链上透明，用户可控</p>
+      </div>
+    </div>
+    <div class="card mt-16" style="text-align: center; border-color: var(--accent); background: rgba(108,92,231,0.05);">
+      <h4 style="color: var(--accent); font-size: 18px;">🤝 1 Human + AI Collaboration</h4>
+      <p style="margin-top: 8px;">Move 合约: AI 生成 + 人工审核 · Bot: AI 改造 + 人工测试 · 策略: 人工设计 + AI 实现</p>
+      <p style="color: var(--accent2); margin-top: 4px; font-weight: 500;">1 人 + AI 在 10 天内交付完整产品，本身就是 AI 协作效率的证明</p>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== SLIDE 14: TRY IT NOW ==================== -->
+<div class="slide" id="slide-14">
+  <div class="slide-content" style="align-items: center; text-align: center;">
+    <h1 style="font-size: 56px; background: linear-gradient(135deg, #6c5ce7, #00cec9); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
+      Try NEXUS Now
+    </h1>
+    <div class="divider" style="margin: 12px auto 28px;"></div>
+    <div style="display: flex; gap: 16px; flex-wrap: wrap; justify-content: center; margin-bottom: 32px;">
+      <a class="cta-link" href="https://t.me/EVENexusBot" target="_blank">
+        📱 @EVENexusBot
+      </a>
+      <a class="cta-link outline" href="https://github.com/wrx1234/sui-hackathon" target="_blank">
+        🐙 GitHub
+      </a>
+      <a class="cta-link outline" href="#" target="_blank">
+        🌐 Website
+      </a>
+    </div>
+    <div class="big-quote" style="border: none; text-align: center; padding: 0; font-size: 28px;">
+      "Your Assembly doesn't sleep.<br>Neither does NEXUS."
+    </div>
+    <div style="margin-top: 40px;">
+      <p style="font-size: 18px; color: var(--text-dim);">We'd love your feedback! 🙏</p>
+      <div style="margin-top: 16px; display: flex; gap: 12px; justify-content: center;">
+        <span class="tag accent">AI-Powered</span>
+        <span class="tag teal">24/7 Management</span>
+        <span class="tag pink">On-Chain Security</span>
+        <span class="tag">Walrus Audit</span>
+      </div>
+    </div>
+    <p style="margin-top: 48px; font-size: 15px; color: var(--text-dim);">
+      Built by <strong style="color: var(--text-bright);">Xuan</strong> · 1-person + AI · EVE Frontier × Sui Hackathon 2026
+    </p>
+  </div>
+</div>
+
+</div>
+
+<!-- Slide Counter -->
+<div class="slide-counter">
+  <span id="current-slide">1</span> / <span id="total-slides">14</span>
+</div>
+
+<div class="nav-hint">← → Arrow keys to navigate</div>
+
+<script>
+(function() {
+  const slides = document.querySelectorAll('.slide');
+  const totalSlides = slides.length;
+  let currentSlide = 0;
+
+  document.getElementById('total-slides').textContent = totalSlides;
+
+  function showSlide(index) {
+    if (index < 0 || index >= totalSlides) return;
+    slides[currentSlide].classList.remove('active');
+    currentSlide = index;
+    slides[currentSlide].classList.add('active');
+    document.getElementById('current-slide').textContent = currentSlide + 1;
+  }
+
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'ArrowRight' || e.key === 'ArrowDown' || e.key === ' ') {
+      e.preventDefault();
+      showSlide(currentSlide + 1);
+    } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+      e.preventDefault();
+      showSlide(currentSlide - 1);
+    } else if (e.key === 'Home') {
+      e.preventDefault();
+      showSlide(0);
+    } else if (e.key === 'End') {
+      e.preventDefault();
+      showSlide(totalSlides - 1);
+    }
+  });
+
+  // Touch support
+  let touchStartX = 0;
+  document.addEventListener('touchstart', function(e) {
+    touchStartX = e.changedTouches[0].screenX;
+  });
+  document.addEventListener('touchend', function(e) {
+    const diff = touchStartX - e.changedTouches[0].screenX;
+    if (Math.abs(diff) > 50) {
+      if (diff > 0) showSlide(currentSlide + 1);
+      else showSlide(currentSlide - 1);
+    }
+  });
+
+  // Click navigation (left/right halves)
+  document.addEventListener('click', function(e) {
+    if (e.target.tagName === 'A') return;
+    const x = e.clientX / window.innerWidth;
+    if (x > 0.5) showSlide(currentSlide + 1);
+    else showSlide(currentSlide - 1);
+  });
+})();
+</script>
+
+</body>
+</html>
