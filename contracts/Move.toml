@@ -1,0 +1,8 @@
+[package]
+name = "jarvis"
+edition = "2024"
+
+[dependencies]
+
+[addresses]
+jarvis = "0x0"

@@ -1,0 +1,67 @@
+[
+  {
+    "time": "2026-02-10T22:22:14.096770+08:00",
+    "action": "wallet_auto_create",
+    "detail": "user:6633019220"
+  },
+  {
+    "time": "2026-02-10T22:22:14.954912+08:00",
+    "action": "start",
+    "detail": "Xuan (UTC+8) (id:6633019220)"
+  },
+  {
+    "time": "2026-02-10T22:22:34.649335+08:00",
+    "action": "assets",
+    "detail": "$3.74"
+  },
+  {
+    "time": "2026-02-10T22:22:47.904495+08:00",
+    "action": "swap_quote",
+    "detail": "SUI→WETH rate:0.00118"
+  },
+  {
+    "time": "2026-02-11T00:40:55.385010+08:00",
+    "action": "start",
+    "detail": "Xuan (UTC+8) (id:6633019220)"
+  },
+  {
+    "time": "2026-02-11T01:30:04.775611+08:00",
+    "action": "start",
+    "detail": "Xuan (UTC+8) (id:6633019220)"
+  },
+  {
+    "time": "2026-02-11T02:25:08.372095+08:00",
+    "action": "start",
+    "detail": "Xuan (UTC+8) (id:6633019220)"
+  },
+  {
+    "time": "2026-02-11T02:48:55.858820+08:00",
+    "action": "start",
+    "detail": "Xuan (UTC+8) (id:6633019220)"
+  },
+  {
+    "time": "2026-02-11T02:53:26.494911+08:00",
+    "action": "assets",
+    "detail": "$3.74"
+  },
+  {
+    "time": "2026-02-11T04:06:31.430316+08:00",
+    "action": "start",
+    "detail": "Xuan (UTC+8) (id:6633019220)"
+  },
+  {
+    "time": "2026-02-11T04:06:44.845009+08:00",
+    "action": "assets",
+    "detail": "$3.74"
+  },
+  {
+    "time": "2026-02-11T04:06:50.784039+08:00",
+    "action": "swap_quote",
+    "detail": "SUI→CETUS rate:42.5"
+  },
+  {
+    "time": "2026-02-12T02:42:09.468006+08:00",
+    "action": "start",
+    "detail": "Xuan (UTC+8) (id:6633019220)"
+  }
+]

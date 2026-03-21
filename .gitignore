@@ -1,0 +1,15 @@
+node_modules/
+.env
+*.key
+__pycache__/
+.DS_Store
+build/
+dist/
+node_modules/
+logs/
+.env
+bot.log
+node_modules/
+logs/
+.env
+package-lock.json

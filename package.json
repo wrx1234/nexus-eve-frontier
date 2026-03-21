@@ -1,0 +1,23 @@
+{
+  "name": "sui-defi-jarvis",
+  "version": "0.1.0",
+  "description": "Autonomous AI DeFi Agent on Sui - The Infinite Money Glitch",
+  "type": "module",
+  "scripts": {
+    "start": "tsx agent/main.ts",
+    "bot": "tsx bot/main.ts",
+    "test": "tsx scripts/test-swap.ts"
+  },
+  "dependencies": {
+    "@cetusprotocol/aggregator-sdk": "latest",
+    "@mysten/sui": "latest",
+    "dotenv": "latest",
+    "grammy": "latest",
+    "undici": "^7.21.0"
+  },
+  "devDependencies": {
+    "@types/node": "latest",
+    "tsx": "^4.21.0",
+    "typescript": "latest"
+  }
+}
