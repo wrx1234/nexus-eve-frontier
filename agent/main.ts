@@ -11,6 +11,8 @@ import { logAction, flushLogs } from './logger.js';
 import { getManagedAssemblies, formatAssemblyStatus } from './assembly.js';
 import { generateIntelReport, formatIntelReport } from './intelligence.js';
 import { getCharacterByWallet, getAllGates, getAllStorageUnits, getAllNetworkNodes, getAllTurrets } from './graphql.js';
+import * as ecosystem from './ecosystem.js';
+import * as viral from './viral.js';
 
 const NETWORK = process.env.SUI_NETWORK || 'testnet';
 const PRIVATE_KEY = process.env.SUI_PRIVATE_KEY;
@@ -105,6 +107,8 @@ async function main() {
 
   // 9. 显示状态
   console.log(`\n${formatAssemblyStatus(getManagedAssemblies())}`);
+  console.log('🌐 Ecosystem integration layer: READY');
+  console.log('📣 Viral growth engine: READY');
   console.log(`\n🚀 Commander 已就绪！`);
   console.log(`💬 通过 Telegram Bot 与我交互`);
   console.log(`📝 日志: logs/ + Walrus\n`);
