@@ -39,8 +39,8 @@ HK_TZ = timezone(timedelta(hours=8))
 PERSISTENT_KEYBOARD = ReplyKeyboardMarkup(
     [
         [KeyboardButton("📊 状态面板"), KeyboardButton("⛽ 燃料管理")],
-        [KeyboardButton("🚪 门禁管理"), KeyboardButton("🔔 告警设置")],
-        [KeyboardButton("💰 钱包"), KeyboardButton("❓ 帮助")],
+        [KeyboardButton("🛡️ 保险"), KeyboardButton("🔔 告警设置")],
+        [KeyboardButton("🚪 门禁管理"), KeyboardButton("❓ 帮助")],
     ],
     resize_keyboard=True,
     is_persistent=True,
@@ -301,6 +301,8 @@ def main_keyboard(uid):
              InlineKeyboardButton("⛽ 燃料管理", callback_data="fuel")],
             [InlineKeyboardButton("🚪 Gate 管理", callback_data="gate"),
              InlineKeyboardButton("🔔 告警配置", callback_data="alert")],
+            [InlineKeyboardButton("🛡️ 保险", callback_data="insure_menu"),
+             InlineKeyboardButton("📋 保单", callback_data="claims_view")],
             [InlineKeyboardButton("👛 钱包", callback_data="wallet_view"),
              InlineKeyboardButton("💰 余额", callback_data="balance_view")],
             [InlineKeyboardButton("📋 日志", callback_data="logs"),
@@ -319,6 +321,8 @@ def main_keyboard(uid):
              InlineKeyboardButton("⛽ Fuel Manager", callback_data="fuel")],
             [InlineKeyboardButton("🚪 Gate Manager", callback_data="gate"),
              InlineKeyboardButton("🔔 Alerts", callback_data="alert")],
+            [InlineKeyboardButton("🛡️ Insurance", callback_data="insure_menu"),
+             InlineKeyboardButton("📋 Policies", callback_data="claims_view")],
             [InlineKeyboardButton("👛 Wallet", callback_data="wallet_view"),
              InlineKeyboardButton("💰 Balance", callback_data="balance_view")],
             [InlineKeyboardButton("📋 Logs", callback_data="logs"),
@@ -476,7 +480,10 @@ async def _send_status_panel(msg, uid: str):
 
     assembly_text = "\n".join(lines)
 
+    demo_label = "📡 _Demo Data - 对接链上数据中_" if lang == "cn" else "📡 _Demo Data - Connecting to on-chain_"
+
     if lang == "cn":
+        fuel_line = f"⛽ 燃料警报: {fuel_alerts} 个 assembly 需要加油" if fuel_alerts > 0 else "✅ 所有燃料正常"
         text = (
             f"🤖 *NEXUS Assembly Dashboard*\n\n"
             f"📊 你的 Assemblies ({len(assemblies)})\n"
@@ -484,16 +491,11 @@ async def _send_status_panel(msg, uid: str):
             f"{assembly_text}\n"
             f"━━━━━━━━━━━━━━━━━━━━━\n"
             f"💰 24h 总收益: {total_rev:.1f} SUI\n"
-            f"⛽ 燃料警报: {fuel_alerts} 个 assembly 需要加油" if fuel_alerts > 0 else
-            f"🤖 *NEXUS Assembly Dashboard*\n\n"
-            f"📊 你的 Assemblies ({len(assemblies)})\n"
-            f"━━━━━━━━━━━━━━━━━━━━━\n\n"
-            f"{assembly_text}\n"
-            f"━━━━━━━━━━━━━━━━━━━━━\n"
-            f"💰 24h 总收益: {total_rev:.1f} SUI\n"
-            f"✅ 所有燃料正常"
+            f"{fuel_line}\n\n"
+            f"{demo_label}"
         )
     else:
+        fuel_line = f"⛽ Fuel Alert: {fuel_alerts} assembly needs refuel" if fuel_alerts > 0 else "✅ All fuel levels normal"
         text = (
             f"🤖 *NEXUS Assembly Dashboard*\n\n"
             f"📊 Your Assemblies ({len(assemblies)})\n"
@@ -501,14 +503,8 @@ async def _send_status_panel(msg, uid: str):
             f"{assembly_text}\n"
             f"━━━━━━━━━━━━━━━━━━━━━\n"
             f"💰 Total Revenue (24h): {total_rev:.1f} SUI\n"
-            f"⛽ Fuel Alert: {fuel_alerts} assembly needs refuel" if fuel_alerts > 0 else
-            f"🤖 *NEXUS Assembly Dashboard*\n\n"
-            f"📊 Your Assemblies ({len(assemblies)})\n"
-            f"━━━━━━━━━━━━━━━━━━━━━\n\n"
-            f"{assembly_text}\n"
-            f"━━━━━━━━━━━━━━━━━━━━━\n"
-            f"💰 Total Revenue (24h): {total_rev:.1f} SUI\n"
-            f"✅ All fuel levels normal"
+            f"{fuel_line}\n\n"
+            f"{demo_label}"
         )
 
     kb = InlineKeyboardMarkup([
@@ -1021,6 +1017,185 @@ async def _send_whale_panel(msg, uid: str):
     await msg.reply_text(text, parse_mode="Markdown", reply_markup=kb)
 
 
+# ==================== 保险系统 ====================
+INSURANCE_FILE = os.path.join(DATA_DIR, "insurance.json")
+
+def _load_insurance() -> dict:
+    if os.path.exists(INSURANCE_FILE):
+        try:
+            with open(INSURANCE_FILE) as f: return json.load(f)
+        except: pass
+    return {}
+
+def _save_insurance(data: dict):
+    with open(INSURANCE_FILE, "w") as f: json.dump(data, f, indent=2, ensure_ascii=False)
+
+def _get_user_policies(uid: str) -> list:
+    """获取用户保单 (Demo 数据)"""
+    data = _load_insurance()
+    if uid in data and data[uid].get("policies"):
+        return data[uid]["policies"]
+    # 返回 Demo 保单
+    return [
+        {
+            "assembly_name": "Alpha Bridge",
+            "assembly_type": "smart_gate",
+            "icon": "🚪",
+            "tier": "standard",
+            "tier_label": "Standard",
+            "coverage": 50,
+            "status": "active",
+            "expiry": "2026-04-15",
+        },
+        {
+            "assembly_name": "Perimeter Defense",
+            "assembly_type": "smart_turret",
+            "icon": "🔫",
+            "tier": "premium",
+            "tier_label": "Premium",
+            "coverage": 200,
+            "status": "active",
+            "expiry": "2026-04-20",
+        },
+    ]
+
+INSURANCE_TIERS = {
+    "basic": {"label": "Basic (基础)", "emoji": "🥉", "coverage": 10, "premium_weekly": 0.15, "covers": "Assembly 被摧毁"},
+    "standard": {"label": "Standard (标准)", "emoji": "🥈", "coverage": 50, "premium_weekly": 0.6, "covers": "摧毁 + 离线超时"},
+    "premium": {"label": "Premium (高级)", "emoji": "🥇", "coverage": 200, "premium_weekly": 2.0, "covers": "摧毁 + 离线 + 燃料耗尽"},
+}
+
+
+async def cmd_insure(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    uid = str(update.effective_user.id)
+    lang = get_lang(uid)
+    log_action("insure", f"uid:{uid}")
+
+    if lang == "cn":
+        text = (
+            f"🛡️ *NEXUS Insurance*\n\n"
+            f"为你的 Smart Assembly 投保，被摧毁时自动理赔。\n\n"
+            f"📋 *保险方案:*\n"
+            f"━━━━━━━━━━━━━━━━━━━━━\n\n"
+            f"🥉 *Basic (基础)*\n"
+            f"   保额: 10 SUI | 保费: 0.15 SUI/周\n"
+            f"   覆盖: Assembly 被摧毁\n\n"
+            f"🥈 *Standard (标准)*\n"
+            f"   保额: 50 SUI | 保费: 0.6 SUI/周\n"
+            f"   覆盖: 摧毁 + 离线超时\n\n"
+            f"🥇 *Premium (高级)*\n"
+            f"   保额: 200 SUI | 保费: 2 SUI/周\n"
+            f"   覆盖: 摧毁 + 离线 + 燃料耗尽\n\n"
+            f"━━━━━━━━━━━━━━━━━━━━━\n"
+            f"📝 合约地址: `{DEPLOYED_PACKAGE[:20]}...`\n"
+            f"🔗 链上保险池, 理赔自动执行"
+        )
+    else:
+        text = (
+            f"🛡️ *NEXUS Insurance*\n\n"
+            f"Insure your Smart Assembly. Auto-claim when destroyed.\n\n"
+            f"📋 *Insurance Plans:*\n"
+            f"━━━━━━━━━━━━━━━━━━━━━\n\n"
+            f"🥉 *Basic*\n"
+            f"   Coverage: 10 SUI | Premium: 0.15 SUI/week\n"
+            f"   Covers: Assembly destroyed\n\n"
+            f"🥈 *Standard*\n"
+            f"   Coverage: 50 SUI | Premium: 0.6 SUI/week\n"
+            f"   Covers: Destroyed + Offline timeout\n\n"
+            f"🥇 *Premium*\n"
+            f"   Coverage: 200 SUI | Premium: 2 SUI/week\n"
+            f"   Covers: Destroyed + Offline + Fuel depleted\n\n"
+            f"━━━━━━━━━━━━━━━━━━━━━\n"
+            f"📝 Contract: `{DEPLOYED_PACKAGE[:20]}...`\n"
+            f"🔗 On-chain pool, auto-claim execution"
+        )
+
+    kb = InlineKeyboardMarkup([
+        [InlineKeyboardButton("🥉 Basic", callback_data="insure_basic"),
+         InlineKeyboardButton("🥈 Standard", callback_data="insure_standard"),
+         InlineKeyboardButton("🥇 Premium", callback_data="insure_premium")],
+        [InlineKeyboardButton("📋 " + ("我的保单" if lang == "cn" else "My Policies"), callback_data="claims_view"),
+         InlineKeyboardButton("🔙 " + ("返回" if lang == "cn" else "Menu"), callback_data="back")],
+    ])
+    await update.message.reply_text(text, parse_mode="Markdown", reply_markup=kb)
+
+
+async def cmd_claims(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    uid = str(update.effective_user.id)
+    log_action("claims", f"uid:{uid}")
+    await _send_claims_panel(update.message, uid)
+
+
+async def _send_claims_panel(msg, uid: str):
+    """保单列表面板"""
+    lang = get_lang(uid)
+    policies = _get_user_policies(uid)
+
+    if not policies:
+        no_policy = "📋 暂无保单。使用 /insure 投保!" if lang == "cn" else "📋 No policies yet. Use /insure to get insured!"
+        kb = InlineKeyboardMarkup([
+            [InlineKeyboardButton("🛡️ " + ("投保" if lang == "cn" else "Get Insured"), callback_data="claims_new")],
+            [InlineKeyboardButton("🔙 " + ("返回" if lang == "cn" else "Menu"), callback_data="back")],
+        ])
+        await msg.reply_text(no_policy, reply_markup=kb)
+        return
+
+    lines = []
+    total_coverage = 0
+    total_premium = 0.0
+    for p in policies:
+        tier_info = INSURANCE_TIERS.get(p["tier"], {})
+        status_icon = "🟢" if p["status"] == "active" else "🔴"
+        status_text = "有效" if p["status"] == "active" and lang == "cn" else "Active" if p["status"] == "active" else "Expired"
+        tier_emoji = tier_info.get("emoji", "📋")
+
+        block = (
+            f"🛡️ {p['icon']} *{p['assembly_name']}*\n"
+            f"   方案: {tier_emoji} {p['tier_label']} | 保额: {p['coverage']} SUI\n"
+            f"   状态: {status_icon} {status_text} | 到期: {p['expiry']}\n"
+        ) if lang == "cn" else (
+            f"🛡️ {p['icon']} *{p['assembly_name']}*\n"
+            f"   Plan: {tier_emoji} {p['tier_label']} | Coverage: {p['coverage']} SUI\n"
+            f"   Status: {status_icon} {status_text} | Expires: {p['expiry']}\n"
+        )
+        lines.append(block)
+        total_coverage += p["coverage"]
+        total_premium += tier_info.get("premium_weekly", 0)
+
+    policy_text = "\n".join(lines)
+
+    if lang == "cn":
+        text = (
+            f"📋 *我的保单*\n"
+            f"━━━━━━━━━━━━━━━━━━━━━\n\n"
+            f"{policy_text}\n"
+            f"━━━━━━━━━━━━━━━━━━━━━\n"
+            f"💰 总保费: {total_premium:.1f} SUI/周\n"
+            f"🛡️ 总保额: {total_coverage} SUI\n"
+            f"📊 理赔记录: 0 次\n\n"
+            f"_⚠️ Demo 数据 - 对接链上保险合约_"
+        )
+    else:
+        text = (
+            f"📋 *My Policies*\n"
+            f"━━━━━━━━━━━━━━━━━━━━━\n\n"
+            f"{policy_text}\n"
+            f"━━━━━━━━━━━━━━━━━━━━━\n"
+            f"💰 Total Premium: {total_premium:.1f} SUI/week\n"
+            f"🛡️ Total Coverage: {total_coverage} SUI\n"
+            f"📊 Claims: 0\n\n"
+            f"_⚠️ Demo Data - Connected to on-chain insurance contract_"
+        )
+
+    kb = InlineKeyboardMarkup([
+        [InlineKeyboardButton("📄 " + ("保单详情" if lang == "cn" else "Details"), callback_data="claims_detail"),
+         InlineKeyboardButton("🆕 " + ("新增投保" if lang == "cn" else "New Policy"), callback_data="claims_new")],
+        [InlineKeyboardButton("📊 " + ("理赔历史" if lang == "cn" else "Claim History"), callback_data="claims_history"),
+         InlineKeyboardButton("🔙 " + ("返回" if lang == "cn" else "Menu"), callback_data="back")],
+    ])
+    await msg.reply_text(text, parse_mode="Markdown", reply_markup=kb)
+
+
 async def cmd_help(update: Update, context):
     uid = str(update.effective_user.id)
     lang = get_lang(uid)
@@ -1034,6 +1209,9 @@ async def cmd_help(update: Update, context):
             f"  /fuel - 燃料管理\n"
             f"  /gate - Gate 门禁管理\n"
             f"  /alert - 告警配置\n\n"
+            f"🛡️ *保险*\n"
+            f"  /insure - 保险方案\n"
+            f"  /claims - 我的保单\n\n"
             f"💰 *钱包 & 交易*\n"
             f"  /wallet - 钱包信息\n"
             f"  /balance - 快速余额查询\n\n"
@@ -1057,6 +1235,9 @@ async def cmd_help(update: Update, context):
             f"  /fuel - Fuel management\n"
             f"  /gate - Gate control\n"
             f"  /alert - Alert settings\n\n"
+            f"🛡️ *Insurance*\n"
+            f"  /insure - Insurance plans\n"
+            f"  /claims - My policies\n\n"
             f"💰 *Wallet & Trading*\n"
             f"  /wallet - Wallet info\n"
             f"  /balance - Quick balance\n\n"
@@ -1302,6 +1483,211 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
         await q.message.reply_text(text, parse_mode="Markdown")
 
+    # === Insurance callbacks ===
+    elif data == "insure_menu":
+        if lang == "cn":
+            text = (
+                f"🛡️ *NEXUS Insurance*\n\n"
+                f"为你的 Smart Assembly 投保，被摧毁时自动理赔。\n\n"
+                f"📋 *保险方案:*\n"
+                f"━━━━━━━━━━━━━━━━━━━━━\n\n"
+                f"🥉 *Basic* - 保额: 10 SUI | 保费: 0.15 SUI/周\n"
+                f"🥈 *Standard* - 保额: 50 SUI | 保费: 0.6 SUI/周\n"
+                f"🥇 *Premium* - 保额: 200 SUI | 保费: 2 SUI/周"
+            )
+        else:
+            text = (
+                f"🛡️ *NEXUS Insurance*\n\n"
+                f"Insure your Smart Assembly. Auto-claim when destroyed.\n\n"
+                f"📋 *Plans:*\n"
+                f"━━━━━━━━━━━━━━━━━━━━━\n\n"
+                f"🥉 *Basic* - Coverage: 10 SUI | 0.15 SUI/week\n"
+                f"🥈 *Standard* - Coverage: 50 SUI | 0.6 SUI/week\n"
+                f"🥇 *Premium* - Coverage: 200 SUI | 2 SUI/week"
+            )
+        kb = InlineKeyboardMarkup([
+            [InlineKeyboardButton("🥉 Basic", callback_data="insure_basic"),
+             InlineKeyboardButton("🥈 Standard", callback_data="insure_standard"),
+             InlineKeyboardButton("🥇 Premium", callback_data="insure_premium")],
+            [InlineKeyboardButton("📋 " + ("我的保单" if lang == "cn" else "My Policies"), callback_data="claims_view"),
+             InlineKeyboardButton("🔙 " + ("返回" if lang == "cn" else "Menu"), callback_data="back")],
+        ])
+        await q.message.reply_text(text, parse_mode="Markdown", reply_markup=kb)
+
+    elif data.startswith("insure_"):
+        tier_key = data.replace("insure_", "")
+        tier = INSURANCE_TIERS.get(tier_key)
+        if tier:
+            log_action("insure_select", f"uid:{uid} tier:{tier_key}")
+            if lang == "cn":
+                text = (
+                    f"✅ *投保确认*\n"
+                    f"━━━━━━━━━━━━━━━━━━━━━\n\n"
+                    f"📋 方案: {tier['emoji']} *{tier['label']}*\n"
+                    f"🛡️ 保额: {tier['coverage']} SUI\n"
+                    f"💰 保费: {tier['premium_weekly']} SUI/周\n"
+                    f"📌 覆盖: {tier['covers']}\n"
+                    f"⏰ 有效期: 7 天 (可续保)\n\n"
+                    f"📝 合约将调用 `buy_insurance()` 函数\n"
+                    f"保费自动转入链上保险池\n\n"
+                    f"⚠️ _Demo 模式 - 链上合约已部署_"
+                )
+            else:
+                text = (
+                    f"✅ *Insurance Confirmation*\n"
+                    f"━━━━━━━━━━━━━━━━━━━━━\n\n"
+                    f"📋 Plan: {tier['emoji']} *{tier['label']}*\n"
+                    f"🛡️ Coverage: {tier['coverage']} SUI\n"
+                    f"💰 Premium: {tier['premium_weekly']} SUI/week\n"
+                    f"📌 Covers: {tier['covers']}\n"
+                    f"⏰ Duration: 7 days (renewable)\n\n"
+                    f"📝 Contract calls `buy_insurance()`\n"
+                    f"Premium deposited to on-chain pool\n\n"
+                    f"⚠️ _Demo Mode - Contract deployed on testnet_"
+                )
+            kb = InlineKeyboardMarkup([
+                [InlineKeyboardButton("✅ " + ("确认投保" if lang == "cn" else "Confirm"), callback_data=f"insure_confirm_{tier_key}"),
+                 InlineKeyboardButton("🔙 " + ("返回" if lang == "cn" else "Back"), callback_data="insure_back")],
+            ])
+            await q.message.reply_text(text, parse_mode="Markdown", reply_markup=kb)
+
+    elif data.startswith("insure_confirm_"):
+        tier_key = data.replace("insure_confirm_", "")
+        tier = INSURANCE_TIERS.get(tier_key)
+        if tier:
+            tx_hash = hashlib.sha256(f"insure{uid}{tier_key}{time.time()}".encode()).hexdigest()[:16]
+            log_action("insure_buy", f"uid:{uid} tier:{tier_key}")
+            if lang == "cn":
+                text = (
+                    f"🎉 *投保成功!*\n"
+                    f"━━━━━━━━━━━━━━━━━━━━━\n\n"
+                    f"🛡️ {tier['emoji']} {tier['label']}\n"
+                    f"💰 保费: {tier['premium_weekly']} SUI\n"
+                    f"🛡️ 保额: {tier['coverage']} SUI\n"
+                    f"📋 TX: `0x{tx_hash}...`\n\n"
+                    f"保单已生效, 有效期 7 天\n"
+                    f"使用 /claims 查看保单\n\n"
+                    f"⚠️ _Demo 模式 - Testnet 模拟_"
+                )
+            else:
+                text = (
+                    f"🎉 *Insurance Purchased!*\n"
+                    f"━━━━━━━━━━━━━━━━━━━━━\n\n"
+                    f"🛡️ {tier['emoji']} {tier['label']}\n"
+                    f"💰 Premium: {tier['premium_weekly']} SUI\n"
+                    f"🛡️ Coverage: {tier['coverage']} SUI\n"
+                    f"📋 TX: `0x{tx_hash}...`\n\n"
+                    f"Policy active for 7 days\n"
+                    f"Use /claims to view policies\n\n"
+                    f"⚠️ _Demo Mode - Testnet Simulation_"
+                )
+            kb = InlineKeyboardMarkup([
+                [InlineKeyboardButton("📋 " + ("查看保单" if lang == "cn" else "View Policies"), callback_data="claims_view"),
+                 InlineKeyboardButton("🔙 " + ("返回" if lang == "cn" else "Menu"), callback_data="back")],
+            ])
+            await q.message.reply_text(text, parse_mode="Markdown", reply_markup=kb)
+
+    elif data == "insure_back":
+        # 重新显示保险方案
+        if lang == "cn":
+            text = "🛡️ 使用 /insure 查看保险方案"
+        else:
+            text = "🛡️ Use /insure to view insurance plans"
+        kb = InlineKeyboardMarkup([
+            [InlineKeyboardButton("🥉 Basic", callback_data="insure_basic"),
+             InlineKeyboardButton("🥈 Standard", callback_data="insure_standard"),
+             InlineKeyboardButton("🥇 Premium", callback_data="insure_premium")],
+            [InlineKeyboardButton("🔙 " + ("返回" if lang == "cn" else "Menu"), callback_data="back")],
+        ])
+        await q.message.reply_text(text, parse_mode="Markdown", reply_markup=kb)
+
+    elif data == "claims_view":
+        await _send_claims_panel(q.message, uid)
+
+    elif data == "claims_detail":
+        policies = _get_user_policies(uid)
+        if lang == "cn":
+            text = "📄 *保单详情*\n━━━━━━━━━━━━━━━━━━━━━\n\n"
+            for p in policies:
+                tier_info = INSURANCE_TIERS.get(p["tier"], {})
+                text += (
+                    f"🛡️ *{p['assembly_name']}*\n"
+                    f"   类型: {p['icon']} Smart {'Gate' if p['assembly_type']=='smart_gate' else 'Turret'}\n"
+                    f"   方案: {tier_info.get('emoji','')} {p['tier_label']}\n"
+                    f"   保额: {p['coverage']} SUI\n"
+                    f"   保费: {tier_info.get('premium_weekly', 0)} SUI/周\n"
+                    f"   覆盖范围: {tier_info.get('covers', 'N/A')}\n"
+                    f"   到期: {p['expiry']}\n"
+                    f"   状态: {'🟢 有效' if p['status']=='active' else '🔴 过期'}\n\n"
+                )
+            text += f"📝 合约: `{DEPLOYED_PACKAGE[:24]}...`"
+        else:
+            text = "📄 *Policy Details*\n━━━━━━━━━━━━━━━━━━━━━\n\n"
+            for p in policies:
+                tier_info = INSURANCE_TIERS.get(p["tier"], {})
+                text += (
+                    f"🛡️ *{p['assembly_name']}*\n"
+                    f"   Type: {p['icon']} Smart {'Gate' if p['assembly_type']=='smart_gate' else 'Turret'}\n"
+                    f"   Plan: {tier_info.get('emoji','')} {p['tier_label']}\n"
+                    f"   Coverage: {p['coverage']} SUI\n"
+                    f"   Premium: {tier_info.get('premium_weekly', 0)} SUI/week\n"
+                    f"   Covers: {tier_info.get('covers', 'N/A')}\n"
+                    f"   Expires: {p['expiry']}\n"
+                    f"   Status: {'🟢 Active' if p['status']=='active' else '🔴 Expired'}\n\n"
+                )
+            text += f"📝 Contract: `{DEPLOYED_PACKAGE[:24]}...`"
+        kb = InlineKeyboardMarkup([
+            [InlineKeyboardButton("🔙 " + ("返回保单" if lang == "cn" else "Back"), callback_data="claims_view")],
+        ])
+        await q.message.reply_text(text, parse_mode="Markdown", reply_markup=kb)
+
+    elif data == "claims_new":
+        if lang == "cn":
+            text = "🛡️ 选择保险方案:"
+        else:
+            text = "🛡️ Choose insurance plan:"
+        kb = InlineKeyboardMarkup([
+            [InlineKeyboardButton("🥉 Basic", callback_data="insure_basic"),
+             InlineKeyboardButton("🥈 Standard", callback_data="insure_standard"),
+             InlineKeyboardButton("🥇 Premium", callback_data="insure_premium")],
+            [InlineKeyboardButton("🔙 " + ("返回" if lang == "cn" else "Back"), callback_data="claims_view")],
+        ])
+        await q.message.reply_text(text, reply_markup=kb)
+
+    elif data == "claims_history":
+        if lang == "cn":
+            text = (
+                f"📊 *理赔历史*\n"
+                f"━━━━━━━━━━━━━━━━━━━━━\n\n"
+                f"暂无理赔记录 ✅\n\n"
+                f"当你的 Assembly 被摧毁或遭遇承保事件时,\n"
+                f"NEXUS 将自动发起链上理赔。\n\n"
+                f"💡 理赔流程:\n"
+                f"  1. 监测到承保事件\n"
+                f"  2. 验证保单有效性\n"
+                f"  3. 调用合约 `claim()` 函数\n"
+                f"  4. 赔付自动到账\n\n"
+                f"_所有理赔记录永久存储在 Walrus_"
+            )
+        else:
+            text = (
+                f"📊 *Claim History*\n"
+                f"━━━━━━━━━━━━━━━━━━━━━\n\n"
+                f"No claims yet ✅\n\n"
+                f"When your Assembly is destroyed or a covered event occurs,\n"
+                f"NEXUS will auto-initiate on-chain claims.\n\n"
+                f"💡 Claim Process:\n"
+                f"  1. Detect covered event\n"
+                f"  2. Verify policy validity\n"
+                f"  3. Call contract `claim()` function\n"
+                f"  4. Payout auto-deposited\n\n"
+                f"_All claims permanently stored on Walrus_"
+            )
+        kb = InlineKeyboardMarkup([
+            [InlineKeyboardButton("🔙 " + ("返回保单" if lang == "cn" else "Back"), callback_data="claims_view")],
+        ])
+        await q.message.reply_text(text, parse_mode="Markdown", reply_markup=kb)
+
     elif data == "settings":
         text = (
             f"⚙️ *{'设置' if lang=='cn' else 'Settings'}*\n"
@@ -1364,12 +1750,18 @@ async def nl_handler(update: Update, context):
         return await cmd_gate(update, context)
     elif text_stripped == "🔔 告警设置":
         return await cmd_alert(update, context)
+    elif text_stripped == "🛡️ 保险":
+        return await cmd_insure(update, context)
     elif text_stripped == "💰 钱包":
         return await cmd_wallet(update, context)
     elif text_stripped == "❓ 帮助":
         return await cmd_help(update, context)
 
-    if any(k in text_lower for k in ["状态", "status", "dashboard", "assembly", "仪表"]):
+    if any(k in text_lower for k in ["保险", "insurance", "insure", "投保"]):
+        await cmd_insure(update, context)
+    elif any(k in text_lower for k in ["保单", "claims", "理赔", "policy"]):
+        await cmd_claims(update, context)
+    elif any(k in text_lower for k in ["状态", "status", "dashboard", "assembly", "仪表"]):
         await cmd_status(update, context)
     elif any(k in text_lower for k in ["燃料", "fuel", "refuel", "加油"]):
         await cmd_fuel(update, context)
@@ -1430,6 +1822,8 @@ async def post_init(application):
         BotCommand("gate", "🚪 Gate Control / 门禁管理"),
         BotCommand("alert", "🔔 Alert Settings / 告警设置"),
         BotCommand("wallet", "💰 Wallet / 钱包"),
+        BotCommand("insure", "🛡️ Insurance / 保险"),
+        BotCommand("claims", "📋 My Policies / 我的保单"),
         BotCommand("share", "📤 Share Card / 分享"),
         BotCommand("help", "❓ Help / 帮助"),
     ]
@@ -1464,6 +1858,8 @@ def main():
     app.add_handler(CommandHandler("balance", cmd_balance))
     app.add_handler(CommandHandler("logs", cmd_logs))
     app.add_handler(CommandHandler("whale", cmd_whale))
+    app.add_handler(CommandHandler("insure", cmd_insure))
+    app.add_handler(CommandHandler("claims", cmd_claims))
     app.add_handler(CommandHandler("share", cmd_share))
     app.add_handler(CommandHandler("refer", cmd_refer))
     app.add_handler(CommandHandler("vote", cmd_vote))
