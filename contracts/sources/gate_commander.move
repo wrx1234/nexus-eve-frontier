@@ -123,16 +123,21 @@ public fun issue_jump_permit(
     let char_tribe = character.tribe();
     let char_id = object::id(character);
 
-    // 获取可变配置引用来更新统计
-    let cfg = config::borrow_rule_mut<GateConfigKey, GateCommanderConfig>(
-        extension_config,
-        admin_cap,
-        GateConfigKey {},
-    );
+    // 先读取配置快照 (immutable borrow)
+    let cfg_snapshot = get_config(extension_config);
+    let allowed_tribe = cfg_snapshot.allowed_tribe;
+    let permit_duration_ms = cfg_snapshot.permit_duration_ms;
+    let allowlist_enabled = cfg_snapshot.allowlist_enabled;
+    let time_control_enabled = cfg_snapshot.time_control_enabled;
+    let open_from_ms = cfg_snapshot.open_from_ms;
+    let open_until_ms = cfg_snapshot.open_until_ms;
 
     // 规则 1: 时间控制
-    if (cfg.time_control_enabled) {
-        if (now_ms < cfg.open_from_ms || now_ms > cfg.open_until_ms) {
+    if (time_control_enabled) {
+        if (now_ms < open_from_ms || now_ms > open_until_ms) {
+            let cfg = config::borrow_rule_mut<GateConfigKey, GateCommanderConfig>(
+                extension_config, admin_cap, GateConfigKey {},
+            );
             cfg.total_denials = cfg.total_denials + 1;
             event::emit(AccessDeniedEvent {
                 gate_id: gate::id(source_gate),
@@ -146,8 +151,11 @@ public fun issue_jump_permit(
     };
 
     // 规则 2: 部落过滤
-    if (cfg.allowed_tribe != 0) {
-        if (char_tribe != cfg.allowed_tribe) {
+    if (allowed_tribe != 0) {
+        if (char_tribe != allowed_tribe) {
+            let cfg = config::borrow_rule_mut<GateConfigKey, GateCommanderConfig>(
+                extension_config, admin_cap, GateConfigKey {},
+            );
             cfg.total_denials = cfg.total_denials + 1;
             event::emit(AccessDeniedEvent {
                 gate_id: gate::id(source_gate),
@@ -161,7 +169,7 @@ public fun issue_jump_permit(
     };
 
     // 规则 3: 白名单 (检查 tribes 列表)
-    if (cfg.allowlist_enabled) {
+    if (allowlist_enabled) {
         assert!(
             extension_config.has_rule<AllowlistKey>(AllowlistKey {}),
             ECharacterNotAllowed,
@@ -178,13 +186,10 @@ public fun issue_jump_permit(
             i = i + 1;
         };
         if (!found) {
-            // 需要重新获取可变引用更新统计
-            let cfg2 = config::borrow_rule_mut<GateConfigKey, GateCommanderConfig>(
-                extension_config,
-                admin_cap,
-                GateConfigKey {},
+            let cfg = config::borrow_rule_mut<GateConfigKey, GateCommanderConfig>(
+                extension_config, admin_cap, GateConfigKey {},
             );
-            cfg2.total_denials = cfg2.total_denials + 1;
+            cfg.total_denials = cfg.total_denials + 1;
             event::emit(AccessDeniedEvent {
                 gate_id: gate::id(source_gate),
                 character_id: char_id,
@@ -197,10 +202,13 @@ public fun issue_jump_permit(
     };
 
     // 所有规则通过 - 签发通行证
-    let expiry_ms = cfg.permit_duration_ms;
+    let expiry_ms = permit_duration_ms;
     assert!(now_ms <= (0xFFFFFFFFFFFFFFFFu64 - expiry_ms), EExpiryOverflow);
     let expires_at_ms = now_ms + expiry_ms;
 
+    let cfg = config::borrow_rule_mut<GateConfigKey, GateCommanderConfig>(
+        extension_config, admin_cap, GateConfigKey {},
+    );
     cfg.total_permits_issued = cfg.total_permits_issued + 1;
 
     // 发出签发事件
