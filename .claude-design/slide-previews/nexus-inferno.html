@@ -1,0 +1,1421 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NEXUS - AI Assembly Manager for EVE Frontier</title>
+
+<!-- Fonts -->
+<link href="https://api.fontshare.com/v2/css?f[]=clash-display@600,700&f[]=general-sans@400,500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+
+<style>
+/* ============================================
+   VIEWPORT FITTING: MANDATORY BASE STYLES
+   ============================================ */
+html, body {
+    height: 100%;
+    overflow-x: hidden;
+}
+html {
+    scroll-snap-type: y mandatory;
+    scroll-behavior: smooth;
+}
+.slide {
+    width: 100vw;
+    height: 100vh;
+    height: 100dvh;
+    overflow: hidden;
+    scroll-snap-align: start;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+}
+.slide-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    max-height: 100%;
+    overflow: hidden;
+    padding: var(--slide-padding);
+}
+:root {
+    --title-size: clamp(1.5rem, 5vw, 4rem);
+    --h2-size: clamp(1.25rem, 3.5vw, 2.5rem);
+    --h3-size: clamp(1rem, 2.5vw, 1.75rem);
+    --body-size: clamp(0.75rem, 1.5vw, 1.125rem);
+    --small-size: clamp(0.65rem, 1vw, 0.875rem);
+    --slide-padding: clamp(1rem, 4vw, 4rem);
+    --content-gap: clamp(0.5rem, 2vw, 2rem);
+    --element-gap: clamp(0.25rem, 1vw, 1rem);
+}
+.card, .container, .content-box {
+    max-width: min(90vw, 1000px);
+    max-height: min(80vh, 700px);
+}
+.feature-list, .bullet-list {
+    gap: clamp(0.4rem, 1vh, 1rem);
+}
+.feature-list li, .bullet-list li {
+    font-size: var(--body-size);
+    line-height: 1.4;
+}
+.grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 250px), 1fr));
+    gap: clamp(0.5rem, 1.5vw, 1rem);
+}
+img, .image-container {
+    max-width: 100%;
+    max-height: min(50vh, 400px);
+    object-fit: contain;
+}
+@media (max-height: 700px) {
+    :root {
+        --slide-padding: clamp(0.75rem, 3vw, 2rem);
+        --content-gap: clamp(0.4rem, 1.5vw, 1rem);
+        --title-size: clamp(1.25rem, 4.5vw, 2.5rem);
+        --h2-size: clamp(1rem, 3vw, 1.75rem);
+    }
+}
+@media (max-height: 600px) {
+    :root {
+        --slide-padding: clamp(0.5rem, 2.5vw, 1.5rem);
+        --content-gap: clamp(0.3rem, 1vw, 0.75rem);
+        --title-size: clamp(1.1rem, 4vw, 2rem);
+        --body-size: clamp(0.7rem, 1.2vw, 0.95rem);
+    }
+    .nav-dots, .keyboard-hint, .decorative { display: none; }
+}
+@media (max-height: 500px) {
+    :root {
+        --slide-padding: clamp(0.4rem, 2vw, 1rem);
+        --title-size: clamp(1rem, 3.5vw, 1.5rem);
+        --h2-size: clamp(0.9rem, 2.5vw, 1.25rem);
+        --body-size: clamp(0.65rem, 1vw, 0.85rem);
+    }
+}
+@media (max-width: 600px) {
+    :root { --title-size: clamp(1.25rem, 7vw, 2.5rem); }
+    .grid { grid-template-columns: 1fr; }
+}
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        transition-duration: 0.2s !important;
+    }
+    html { scroll-behavior: auto; }
+}
+
+/* ============================================
+   INFERNO CYBER THEME
+   ============================================ */
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+    font-family: 'General Sans', sans-serif;
+    font-weight: 400;
+    color: #ffffff;
+    background: #0a0a0a;
+    -webkit-font-smoothing: antialiased;
+}
+
+/* Star canvas */
+#starfield {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    z-index: 0;
+    pointer-events: none;
+}
+
+/* Ember particles */
+#embers {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    z-index: 1;
+    pointer-events: none;
+}
+
+.slide {
+    z-index: 2;
+    background: transparent;
+}
+
+.slide::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, #0a0a0a 0%, #1a0505 50%, #0a0a0a 100%);
+    opacity: 0.92;
+    z-index: -1;
+}
+
+/* Typography */
+h1, h2, h3, .display {
+    font-family: 'Clash Display', sans-serif;
+}
+
+.mono {
+    font-family: 'JetBrains Mono', monospace;
+}
+
+h1 {
+    font-size: var(--title-size);
+    font-weight: 700;
+    color: #ff2d2d;
+    text-shadow: 0 0 20px rgba(255,45,45,0.5), 0 0 60px rgba(255,45,45,0.2);
+    line-height: 1.1;
+}
+
+h2 {
+    font-size: var(--h2-size);
+    font-weight: 600;
+    color: #ff2d2d;
+    text-shadow: 0 0 15px rgba(255,45,45,0.4);
+    margin-bottom: var(--content-gap);
+    line-height: 1.2;
+}
+
+h3 {
+    font-size: var(--h3-size);
+    font-weight: 600;
+    color: #ff6b1a;
+    line-height: 1.3;
+}
+
+p, li {
+    font-size: var(--body-size);
+    color: rgba(255,255,255,0.7);
+    line-height: 1.5;
+}
+
+.subtitle {
+    font-size: var(--h3-size);
+    color: rgba(255,255,255,0.7);
+    font-weight: 400;
+}
+
+.tagline {
+    font-size: var(--body-size);
+    color: #ff6b1a;
+    font-weight: 500;
+    font-style: italic;
+}
+
+.small-text {
+    font-size: var(--small-size);
+    color: rgba(255,255,255,0.5);
+}
+
+/* Fire gradient divider */
+.fire-divider {
+    width: clamp(60px, 15vw, 120px);
+    height: 3px;
+    background: linear-gradient(90deg, #ff2d2d, #ff6b1a);
+    border-radius: 2px;
+    margin: var(--element-gap) 0;
+}
+
+/* Cards */
+.inferno-card {
+    background: rgba(30, 10, 10, 0.7);
+    border: 1px solid rgba(255, 45, 45, 0.12);
+    border-radius: clamp(8px, 1vw, 12px);
+    padding: clamp(0.6rem, 1.5vw, 1.2rem);
+    backdrop-filter: blur(10px);
+    transition: all 0.3s ease;
+}
+.inferno-card:hover {
+    border-color: rgba(255, 107, 26, 0.25);
+    box-shadow: 0 0 20px rgba(255, 45, 45, 0.15), 0 0 40px rgba(255, 45, 45, 0.05);
+}
+
+.inferno-card .card-icon {
+    font-size: clamp(1.2rem, 2.5vw, 2rem);
+    margin-bottom: clamp(0.2rem, 0.5vw, 0.5rem);
+}
+
+.inferno-card .card-title {
+    font-family: 'Clash Display', sans-serif;
+    font-weight: 600;
+    font-size: clamp(0.8rem, 1.3vw, 1.1rem);
+    color: #ffffff;
+    margin-bottom: clamp(0.15rem, 0.3vw, 0.3rem);
+}
+
+.inferno-card .card-desc {
+    font-size: var(--small-size);
+    color: rgba(255,255,255,0.6);
+    line-height: 1.4;
+}
+
+/* Highlight card */
+.highlight-card {
+    background: linear-gradient(135deg, rgba(255,45,45,0.15), rgba(255,107,26,0.1));
+    border: 1px solid rgba(255, 45, 45, 0.3);
+    box-shadow: 0 0 30px rgba(255, 45, 45, 0.1);
+}
+
+/* Grid layouts */
+.grid-2x3 {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: clamp(0.4rem, 1vw, 0.8rem);
+}
+.grid-2x2 {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: clamp(0.4rem, 1vw, 0.8rem);
+}
+.grid-3 {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: clamp(0.5rem, 1.5vw, 1.2rem);
+}
+.grid-4 {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: clamp(0.4rem, 1vw, 0.8rem);
+}
+
+@media (max-width: 768px) {
+    .grid-2x3 { grid-template-columns: repeat(2, 1fr); }
+    .grid-3 { grid-template-columns: 1fr; }
+    .grid-4 { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 480px) {
+    .grid-2x3 { grid-template-columns: 1fr; }
+    .grid-2x2 { grid-template-columns: 1fr; }
+    .grid-4 { grid-template-columns: 1fr; }
+}
+
+/* Reveal animations */
+.reveal {
+    opacity: 0;
+    transform: translateY(25px);
+    transition: opacity 0.6s ease, transform 0.6s ease;
+}
+.reveal.visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+.reveal.delay-1 { transition-delay: 0.1s; }
+.reveal.delay-2 { transition-delay: 0.2s; }
+.reveal.delay-3 { transition-delay: 0.3s; }
+.reveal.delay-4 { transition-delay: 0.4s; }
+.reveal.delay-5 { transition-delay: 0.5s; }
+
+/* Progress bar */
+#progress-bar {
+    position: fixed;
+    top: 0; left: 0;
+    height: 3px;
+    background: linear-gradient(90deg, #ff2d2d, #ff6b1a);
+    z-index: 1000;
+    transition: width 0.3s ease;
+    box-shadow: 0 0 10px rgba(255,45,45,0.5);
+}
+
+/* Nav dots */
+.nav-dots {
+    position: fixed;
+    right: clamp(8px, 1.5vw, 20px);
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+.nav-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.2);
+    border: 1px solid rgba(255,45,45,0.3);
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+.nav-dot.active {
+    background: #ff2d2d;
+    box-shadow: 0 0 8px rgba(255,45,45,0.6);
+    transform: scale(1.3);
+}
+
+/* Slide-specific: Cover */
+.cover-title {
+    font-size: clamp(3rem, 12vw, 9rem);
+    font-weight: 700;
+    color: #ff2d2d;
+    text-shadow: 0 0 40px rgba(255,45,45,0.6), 0 0 80px rgba(255,45,45,0.3), 0 0 120px rgba(255,45,45,0.15);
+    letter-spacing: 0.05em;
+    line-height: 1;
+}
+
+.cover-glow {
+    position: absolute;
+    width: clamp(300px, 60vw, 600px);
+    height: clamp(300px, 60vw, 600px);
+    background: radial-gradient(circle, rgba(255,45,45,0.15) 0%, transparent 70%);
+    border-radius: 50%;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: -1;
+    animation: pulse-glow 4s ease-in-out infinite;
+}
+
+@keyframes pulse-glow {
+    0%, 100% { opacity: 0.6; transform: translate(-50%, -50%) scale(1); }
+    50% { opacity: 1; transform: translate(-50%, -50%) scale(1.1); }
+}
+
+/* Architecture layers */
+.arch-layer {
+    display: flex;
+    align-items: center;
+    gap: clamp(0.5rem, 1.5vw, 1rem);
+    padding: clamp(0.5rem, 1vw, 0.8rem) clamp(0.8rem, 2vw, 1.5rem);
+    background: rgba(30, 10, 10, 0.7);
+    border: 1px solid rgba(255,45,45,0.12);
+    border-radius: 8px;
+    backdrop-filter: blur(10px);
+}
+.arch-layer .layer-icon {
+    font-size: clamp(1rem, 2vw, 1.5rem);
+    min-width: 2em;
+    text-align: center;
+}
+.arch-layer .layer-name {
+    font-family: 'Clash Display', sans-serif;
+    font-weight: 600;
+    font-size: clamp(0.75rem, 1.2vw, 1rem);
+    color: #ffffff;
+}
+.arch-layer .layer-desc {
+    font-size: var(--small-size);
+    color: rgba(255,255,255,0.5);
+    margin-left: auto;
+}
+
+.arch-arrow {
+    text-align: center;
+    font-size: clamp(0.8rem, 1.5vw, 1.2rem);
+    color: #ff6b1a;
+    line-height: 1;
+    padding: 2px 0;
+}
+
+/* Tech tags */
+.tech-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: clamp(0.3rem, 0.7vw, 0.5rem);
+}
+.tech-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: var(--small-size);
+    padding: clamp(0.15rem, 0.4vw, 0.3rem) clamp(0.4rem, 1vw, 0.8rem);
+    background: rgba(255,45,45,0.1);
+    border: 1px solid rgba(255,45,45,0.2);
+    border-radius: 4px;
+    color: #ff6b1a;
+}
+
+/* Mapping table */
+.mapping-row {
+    display: flex;
+    align-items: center;
+    gap: clamp(0.5rem, 1.5vw, 1rem);
+    padding: clamp(0.3rem, 0.7vw, 0.5rem) 0;
+    border-bottom: 1px solid rgba(255,45,45,0.08);
+    font-size: var(--small-size);
+}
+.mapping-row .arrow {
+    color: #ff6b1a;
+    font-size: clamp(0.7rem, 1.2vw, 1rem);
+}
+.mapping-from {
+    color: rgba(255,255,255,0.5);
+    min-width: clamp(80px, 15vw, 160px);
+    font-family: 'JetBrains Mono', monospace;
+}
+.mapping-to {
+    color: #ffffff;
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 500;
+}
+
+/* Progress bar (reuse) */
+.reuse-bar-container {
+    width: 100%;
+    height: clamp(8px, 1.2vw, 14px);
+    background: rgba(255,255,255,0.1);
+    border-radius: 10px;
+    overflow: hidden;
+    margin-top: var(--element-gap);
+}
+.reuse-bar {
+    height: 100%;
+    background: linear-gradient(90deg, #ff2d2d, #ff6b1a);
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(255,45,45,0.4);
+    transition: width 1.5s ease;
+    width: 0;
+}
+.reuse-bar.visible { width: 75%; }
+
+/* Flow steps */
+.flow-container {
+    display: flex;
+    align-items: center;
+    gap: clamp(0.2rem, 0.5vw, 0.5rem);
+    flex-wrap: wrap;
+    justify-content: center;
+}
+.flow-step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: clamp(0.4rem, 1vw, 0.8rem);
+    background: rgba(30,10,10,0.7);
+    border: 1px solid rgba(255,45,45,0.12);
+    border-radius: 8px;
+    min-width: clamp(60px, 10vw, 100px);
+    backdrop-filter: blur(10px);
+}
+.flow-step .step-icon {
+    font-size: clamp(1rem, 2vw, 1.5rem);
+    margin-bottom: 0.2rem;
+}
+.flow-step .step-label {
+    font-size: var(--small-size);
+    color: rgba(255,255,255,0.7);
+    font-weight: 500;
+}
+.flow-arrow {
+    color: #ff6b1a;
+    font-size: clamp(0.8rem, 1.5vw, 1.2rem);
+}
+
+/* Checklist */
+.checklist {
+    list-style: none;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: clamp(0.3rem, 0.8vw, 0.6rem);
+}
+.checklist li {
+    font-size: var(--small-size);
+    color: rgba(255,255,255,0.8);
+    display: flex;
+    align-items: center;
+    gap: 0.4em;
+}
+.checklist .check {
+    color: #ff6b1a;
+    font-weight: 700;
+}
+
+@media (max-width: 600px) {
+    .checklist { grid-template-columns: 1fr; }
+}
+
+/* Timeline */
+.timeline {
+    display: flex;
+    flex-direction: column;
+    gap: clamp(0.2rem, 0.5vw, 0.4rem);
+}
+.timeline-item {
+    display: flex;
+    align-items: center;
+    gap: clamp(0.4rem, 1vw, 0.8rem);
+    font-size: var(--small-size);
+}
+.timeline-day {
+    font-family: 'JetBrains Mono', monospace;
+    color: #ff6b1a;
+    font-weight: 500;
+    min-width: clamp(35px, 5vw, 50px);
+}
+.timeline-dot {
+    width: 6px; height: 6px;
+    background: #ff2d2d;
+    border-radius: 50%;
+    box-shadow: 0 0 6px rgba(255,45,45,0.5);
+    flex-shrink: 0;
+}
+.timeline-desc {
+    color: rgba(255,255,255,0.7);
+}
+
+/* Priority tags */
+.priority-tags {
+    display: flex;
+    gap: clamp(0.3rem, 0.8vw, 0.6rem);
+    flex-wrap: wrap;
+    margin-top: var(--element-gap);
+}
+.p-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: var(--small-size);
+    padding: clamp(0.15rem, 0.3vw, 0.25rem) clamp(0.4rem, 0.8vw, 0.7rem);
+    border-radius: 4px;
+}
+.p-tag.p0 { background: rgba(255,45,45,0.25); border: 1px solid #ff2d2d; color: #ff2d2d; }
+.p-tag.p1 { background: rgba(255,107,26,0.2); border: 1px solid #ff6b1a; color: #ff6b1a; }
+.p-tag.p2 { background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.2); color: rgba(255,255,255,0.5); }
+
+/* Ecosystem grid */
+.eco-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: clamp(0.4rem, 1vw, 0.8rem);
+}
+.eco-item {
+    text-align: center;
+    padding: clamp(0.5rem, 1.2vw, 1rem);
+    background: rgba(30,10,10,0.7);
+    border: 1px solid rgba(255,45,45,0.12);
+    border-radius: 8px;
+    font-size: var(--small-size);
+    color: rgba(255,255,255,0.7);
+    backdrop-filter: blur(10px);
+    transition: all 0.3s ease;
+}
+.eco-item:hover {
+    border-color: rgba(255,107,26,0.3);
+    box-shadow: 0 0 15px rgba(255,45,45,0.1);
+}
+.eco-item .eco-icon { font-size: clamp(1.2rem, 2.5vw, 1.8rem); margin-bottom: 0.3rem; }
+.eco-center {
+    background: linear-gradient(135deg, rgba(255,45,45,0.2), rgba(255,107,26,0.15));
+    border: 1px solid rgba(255,45,45,0.3);
+    color: #ff2d2d;
+    font-family: 'Clash Display', sans-serif;
+    font-weight: 700;
+    font-size: clamp(0.9rem, 1.5vw, 1.3rem);
+}
+
+@media (max-width: 768px) {
+    .eco-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+/* CTA links */
+.cta-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: clamp(0.5rem, 1.5vw, 1rem);
+}
+.cta-card {
+    text-align: center;
+    padding: clamp(0.8rem, 2vw, 1.5rem);
+    background: rgba(30,10,10,0.7);
+    border: 1px solid rgba(255,45,45,0.2);
+    border-radius: 12px;
+    backdrop-filter: blur(10px);
+    transition: all 0.3s ease;
+    text-decoration: none;
+}
+.cta-card:hover {
+    border-color: #ff6b1a;
+    box-shadow: 0 0 30px rgba(255,45,45,0.2);
+    transform: translateY(-2px);
+}
+.cta-card .cta-icon { font-size: clamp(1.5rem, 3vw, 2.5rem); margin-bottom: 0.4rem; }
+.cta-card .cta-label {
+    font-family: 'Clash Display', sans-serif;
+    font-weight: 600;
+    font-size: clamp(0.8rem, 1.3vw, 1.1rem);
+    color: #ffffff;
+}
+.cta-card .cta-desc {
+    font-size: var(--small-size);
+    color: rgba(255,255,255,0.5);
+    margin-top: 0.2rem;
+}
+
+@media (max-width: 600px) {
+    .cta-grid { grid-template-columns: 1fr; }
+}
+
+/* Slide-specific alignment */
+.slide-content.center {
+    align-items: center;
+    text-align: center;
+}
+
+/* Slide number */
+.slide-number {
+    position: absolute;
+    bottom: clamp(0.5rem, 1.5vw, 1rem);
+    right: clamp(0.8rem, 2vw, 1.5rem);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: var(--small-size);
+    color: rgba(255,255,255,0.2);
+}
+
+/* Bottom text */
+.bottom-text {
+    position: absolute;
+    bottom: clamp(0.5rem, 1.5vw, 1rem);
+    left: 50%;
+    transform: translateX(-50%);
+    text-align: center;
+    width: 90%;
+}
+</style>
+</head>
+<body>
+
+<!-- Star field canvas -->
+<canvas id="starfield"></canvas>
+<!-- Ember particles canvas -->
+<canvas id="embers"></canvas>
+
+<!-- Progress bar -->
+<div id="progress-bar" style="width: 0%"></div>
+
+<!-- Nav dots -->
+<div class="nav-dots" id="nav-dots"></div>
+
+<!-- ==================== SLIDE 1: COVER ==================== -->
+<div class="slide" id="slide-1">
+    <div class="cover-glow"></div>
+    <div class="slide-content center">
+        <div class="reveal" style="margin-bottom: var(--element-gap);">
+            <div class="small-text mono" style="letter-spacing:0.3em; color: rgba(255,255,255,0.4);">NEURAL EXECUTIVE FOR UNIFIED STATIONS</div>
+        </div>
+        <div class="reveal delay-1">
+            <div class="cover-title">NEXUS</div>
+        </div>
+        <div class="reveal delay-2" style="margin-top: var(--element-gap);">
+            <div class="subtitle">Your 24/7 AI Assembly Manager for EVE Frontier</div>
+        </div>
+        <div class="reveal delay-3" style="margin-top: var(--content-gap);">
+            <div class="fire-divider" style="margin: 0 auto;"></div>
+        </div>
+        <div class="reveal delay-4 bottom-text">
+            <div class="small-text">EVE Frontier × Sui Hackathon 2026 &nbsp;|&nbsp; Built by Xuan · Powered by AI</div>
+        </div>
+    </div>
+    <div class="slide-number">01 / 14</div>
+</div>
+
+<!-- ==================== SLIDE 2: THE PROBLEM ==================== -->
+<div class="slide" id="slide-2">
+    <div class="slide-content">
+        <h2 class="reveal">The Problem</h2>
+        <div class="grid-2x3 reveal delay-1" style="flex:1; max-height: 70vh;">
+            <div class="inferno-card">
+                <div class="card-icon">⛽</div>
+                <div class="card-title">Fuel Anxiety</div>
+                <div class="card-desc">Assembly runs out of fuel = total shutdown. Miss one refill and you lose everything.</div>
+            </div>
+            <div class="inferno-card">
+                <div class="card-icon">🔄</div>
+                <div class="card-title">Multi-Assembly Hell</div>
+                <div class="card-desc">Gate + Storage + Turret + Node. Checking each one manually doesn't scale.</div>
+            </div>
+            <div class="inferno-card">
+                <div class="card-icon">💸</div>
+                <div class="card-title">Missed Trades</div>
+                <div class="card-desc">Offline when the best price hits. Opportunities vanish while you sleep.</div>
+            </div>
+            <div class="inferno-card">
+                <div class="card-icon">🛡️</div>
+                <div class="card-title">Slow Defense</div>
+                <div class="card-desc">Under attack while AFK. No response means no defense.</div>
+            </div>
+            <div class="inferno-card">
+                <div class="card-icon">📊</div>
+                <div class="card-title">Scattered Info</div>
+                <div class="card-desc">Status, events, prices - all in different places. No unified view.</div>
+            </div>
+            <div class="inferno-card">
+                <div class="card-icon">🌙</div>
+                <div class="card-title">24/7 is Impossible</div>
+                <div class="card-desc">Space doesn't stop because you sleep. But you're human.</div>
+            </div>
+        </div>
+        <div class="reveal delay-2" style="text-align:center; margin-top: var(--element-gap);">
+            <div class="tagline">"Smart Assembly needs 24/7 management. Humans can't."</div>
+        </div>
+    </div>
+    <div class="slide-number">02 / 14</div>
+</div>
+
+<!-- ==================== SLIDE 3: OUR SOLUTION ==================== -->
+<div class="slide" id="slide-3">
+    <div class="slide-content center">
+        <h2 class="reveal">Meet</h2>
+        <div class="reveal delay-1">
+            <div class="cover-title" style="font-size: clamp(2.5rem, 10vw, 7rem);">NEXUS</div>
+        </div>
+        <div class="fire-divider reveal delay-2" style="margin: var(--content-gap) auto;"></div>
+        <div class="grid-3 reveal delay-2" style="max-width: min(90vw, 800px); width: 100%;">
+            <div class="inferno-card highlight-card" style="text-align:center;">
+                <div class="card-icon">🤖</div>
+                <div class="card-title">AI Decision Engine</div>
+                <div class="card-desc">Autonomous fuel, trade & defense strategies</div>
+            </div>
+            <div class="inferno-card highlight-card" style="text-align:center;">
+                <div class="card-icon">📱</div>
+                <div class="card-title">Telegram Bot</div>
+                <div class="card-desc">18+ commands, real-time alerts, NL interface</div>
+            </div>
+            <div class="inferno-card highlight-card" style="text-align:center;">
+                <div class="card-icon">📜</div>
+                <div class="card-title">Sui Move Contracts</div>
+                <div class="card-desc">On-chain safety: budgets, limits, emergency brake</div>
+            </div>
+        </div>
+        <div class="reveal delay-3" style="margin-top: var(--content-gap);">
+            <div class="tagline">"Your Assembly doesn't sleep. Neither does NEXUS."</div>
+        </div>
+    </div>
+    <div class="slide-number">03 / 14</div>
+</div>
+
+<!-- ==================== SLIDE 4: CORE FEATURES 1/2 ==================== -->
+<div class="slide" id="slide-4">
+    <div class="slide-content">
+        <h2 class="reveal">Core Features <span style="color: rgba(255,255,255,0.4); font-weight:400;">(1/2)</span></h2>
+        <div class="grid-2x2 reveal delay-1" style="flex:1; max-height: 65vh;">
+            <div class="inferno-card">
+                <div class="card-icon">📊</div>
+                <div class="card-title">Assembly Dashboard</div>
+                <div class="card-desc">One command to see all your Assemblies - fuel, status, revenue. <span class="mono" style="color:#ff6b1a;">/status</span></div>
+            </div>
+            <div class="inferno-card">
+                <div class="card-icon">⛽</div>
+                <div class="card-title">Smart Fuel Management</div>
+                <div class="card-desc">AI monitors burn rate, predicts depletion, auto-refuels before you hit zero.</div>
+            </div>
+            <div class="inferno-card">
+                <div class="card-icon">💰</div>
+                <div class="card-title">Automated Trading</div>
+                <div class="card-desc">AI-driven buy/sell on Storage Assemblies. Trend tracking + mean reversion.</div>
+            </div>
+            <div class="inferno-card">
+                <div class="card-icon">🛡️</div>
+                <div class="card-title">Defense Alerts</div>
+                <div class="card-desc">On-chain attack events trigger instant Telegram push. Never miss a threat.</div>
+            </div>
+        </div>
+    </div>
+    <div class="slide-number">04 / 14</div>
+</div>
+
+<!-- ==================== SLIDE 5: CORE FEATURES 2/2 ==================== -->
+<div class="slide" id="slide-5">
+    <div class="slide-content">
+        <h2 class="reveal">Core Features <span style="color: rgba(255,255,255,0.4); font-weight:400;">(2/2)</span></h2>
+        <div class="grid-2x2 reveal delay-1" style="flex:1; max-height: 65vh;">
+            <div class="inferno-card">
+                <div class="card-icon">🚪</div>
+                <div class="card-title">Gate Control</div>
+                <div class="card-desc">Dynamic pricing, whitelist/blacklist, automated toll collection.</div>
+            </div>
+            <div class="inferno-card">
+                <div class="card-icon">📈</div>
+                <div class="card-title">Revenue Tracking</div>
+                <div class="card-desc">Daily & weekly reports: fuel costs, trade profits, gate fees.</div>
+            </div>
+            <div class="inferno-card">
+                <div class="card-icon">📝</div>
+                <div class="card-title">Walrus Audit Log</div>
+                <div class="card-desc">Every AI decision recorded on Walrus. Immutable, fully auditable.</div>
+            </div>
+            <div class="inferno-card">
+                <div class="card-icon">💬</div>
+                <div class="card-title">Natural Language</div>
+                <div class="card-desc">"Raise gate fee by 20%" - manage Assemblies in plain English.</div>
+            </div>
+        </div>
+    </div>
+    <div class="slide-number">05 / 14</div>
+</div>
+
+<!-- ==================== SLIDE 6: TECHNICAL ARCHITECTURE ==================== -->
+<div class="slide" id="slide-6">
+    <div class="slide-content">
+        <h2 class="reveal">Technical Architecture</h2>
+        <div style="display:flex; gap: var(--content-gap); align-items:flex-start; flex:1; max-height: 72vh;">
+            <div style="flex:1; display:flex; flex-direction:column; gap: 0;" class="reveal delay-1">
+                <div class="arch-layer">
+                    <span class="layer-icon">📱</span>
+                    <span class="layer-name">Telegram Bot</span>
+                    <span class="layer-desc">User Interface</span>
+                </div>
+                <div class="arch-arrow">▼</div>
+                <div class="arch-layer">
+                    <span class="layer-icon">🤖</span>
+                    <span class="layer-name">AI Decision Engine</span>
+                    <span class="layer-desc">Strategy & Control</span>
+                </div>
+                <div class="arch-arrow">▼</div>
+                <div class="arch-layer">
+                    <span class="layer-icon">📜</span>
+                    <span class="layer-name">Sui Move Contracts</span>
+                    <span class="layer-desc">On-chain Safety</span>
+                </div>
+                <div class="arch-arrow">▼</div>
+                <div class="arch-layer">
+                    <span class="layer-icon">🌍</span>
+                    <span class="layer-name">EVE Frontier World</span>
+                    <span class="layer-desc">Game Data</span>
+                </div>
+                <div class="arch-arrow">▼</div>
+                <div class="arch-layer">
+                    <span class="layer-icon">🐋</span>
+                    <span class="layer-name">Walrus Storage</span>
+                    <span class="layer-desc">Audit Trail</span>
+                </div>
+            </div>
+            <div style="display:flex; flex-direction:column; justify-content:center; gap: var(--element-gap);" class="reveal delay-2">
+                <div class="tech-tags" style="flex-direction:column;">
+                    <span class="tech-tag">Move</span>
+                    <span class="tech-tag">TypeScript</span>
+                    <span class="tech-tag">Sui SDK</span>
+                    <span class="tech-tag">Walrus</span>
+                    <span class="tech-tag">GraphQL</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="slide-number">06 / 14</div>
+</div>
+
+<!-- ==================== SLIDE 7: HACKATHON FIT ==================== -->
+<div class="slide" id="slide-7">
+    <div class="slide-content center">
+        <h2 class="reveal">"A Toolkit for Civilization"</h2>
+        <div class="reveal delay-1" style="max-width: min(90vw, 700px); margin-top: var(--content-gap);">
+            <p style="font-size: var(--body-size); color: rgba(255,255,255,0.7); line-height:1.6;">
+                EVE Frontier's civilization is built on Smart Assembly networks - Gates connect traffic, Storage manages resources, Turrets secure space, Nodes relay data. <br><br>
+                <strong style="color:#ff2d2d;">NEXUS is the toolbox that manages this infrastructure.</strong>
+            </p>
+        </div>
+        <div class="fire-divider reveal delay-2" style="margin: var(--content-gap) auto;"></div>
+        <div class="grid-2x2 reveal delay-3" style="max-width: min(90vw, 600px); width:100%;">
+            <div class="inferno-card highlight-card" style="text-align:center;">
+                <div class="card-icon">🔧</div>
+                <div class="card-title">Utility Award</div>
+                <div class="card-desc" style="color:#ff6b1a; font-weight:500;">$5,000</div>
+                <div class="card-desc">Pure utility solving real player pain</div>
+            </div>
+            <div class="inferno-card highlight-card" style="text-align:center;">
+                <div class="card-icon">🌐</div>
+                <div class="card-title">Live Integration</div>
+                <div class="card-desc" style="color:#ff6b1a; font-weight:500;">$5,000</div>
+                <div class="card-desc">Deployed to Stillness, real Assembly data</div>
+            </div>
+        </div>
+    </div>
+    <div class="slide-number">07 / 14</div>
+</div>
+
+<!-- ==================== SLIDE 8: BUILT ON SUIJARVIS ==================== -->
+<div class="slide" id="slide-8">
+    <div class="slide-content">
+        <h2 class="reveal">Not Starting from Zero</h2>
+        <p class="reveal delay-1 subtitle" style="margin-bottom: var(--content-gap);">Built on the battle-tested SuiJarvis stack</p>
+        <div class="reveal delay-2" style="max-width: min(90vw, 700px);">
+            <div class="mapping-row">
+                <span class="mapping-from">Vault</span>
+                <span class="arrow">→</span>
+                <span class="mapping-to">AssemblyManager</span>
+            </div>
+            <div class="mapping-row">
+                <span class="mapping-from">AI Strategy</span>
+                <span class="arrow">→</span>
+                <span class="mapping-to">Fuel / Trade / Defense Strategy</span>
+            </div>
+            <div class="mapping-row">
+                <span class="mapping-from">Risk System</span>
+                <span class="arrow">→</span>
+                <span class="mapping-to">Safety System</span>
+            </div>
+            <div class="mapping-row">
+                <span class="mapping-from">TG Bot</span>
+                <span class="arrow">→</span>
+                <span class="mapping-to">Assembly Bot</span>
+            </div>
+            <div class="mapping-row">
+                <span class="mapping-from">Walrus Logs</span>
+                <span class="arrow">→</span>
+                <span class="mapping-to">Walrus Logs <span style="color:#ff6b1a;">(direct reuse)</span></span>
+            </div>
+        </div>
+        <div class="reveal delay-3" style="margin-top: var(--content-gap); max-width: min(90vw, 700px);">
+            <div style="display:flex; justify-content:space-between; margin-bottom: 0.3rem;">
+                <span class="small-text">Code Reuse</span>
+                <span class="small-text mono" style="color:#ff6b1a;">60-95%</span>
+            </div>
+            <div class="reuse-bar-container">
+                <div class="reuse-bar" id="reuse-bar"></div>
+            </div>
+        </div>
+    </div>
+    <div class="slide-number">08 / 14</div>
+</div>
+
+<!-- ==================== SLIDE 9: ECOSYSTEM ==================== -->
+<div class="slide" id="slide-9">
+    <div class="slide-content">
+        <h2 class="reveal">Powering Other Projects</h2>
+        <p class="reveal delay-1 small-text" style="margin-bottom: var(--content-gap); color: rgba(255,255,255,0.5);">NEXUS as infrastructure layer - not competing, empowering the ecosystem</p>
+        <div class="eco-grid reveal delay-2">
+            <div class="eco-item">
+                <div class="eco-icon">🎯</div>
+                <div>Bounty Board</div>
+            </div>
+            <div class="eco-item">
+                <div class="eco-icon">⛽</div>
+                <div>Star-Fuel Panic</div>
+            </div>
+            <div class="eco-item">
+                <div class="eco-icon">🗺️</div>
+                <div>Frontier Trade Routes</div>
+            </div>
+            <div class="eco-item eco-center">
+                <div class="eco-icon">🔥</div>
+                <div>NEXUS</div>
+            </div>
+            <div class="eco-item">
+                <div class="eco-icon">💱</div>
+                <div>EVE Buff Market</div>
+            </div>
+            <div class="eco-item">
+                <div class="eco-icon">📖</div>
+                <div>DemoSay</div>
+            </div>
+            <div class="eco-item">
+                <div class="eco-icon">👁️</div>
+                <div>eve eyes</div>
+            </div>
+            <div class="eco-item">
+                <div class="eco-icon">🧊</div>
+                <div>BrineVault</div>
+            </div>
+        </div>
+    </div>
+    <div class="slide-number">09 / 14</div>
+</div>
+
+<!-- ==================== SLIDE 10: VIRAL GROWTH ==================== -->
+<div class="slide" id="slide-10">
+    <div class="slide-content center">
+        <h2 class="reveal">Community Vote Growth Engine</h2>
+        <div class="reveal delay-1" style="margin: var(--content-gap) 0;">
+            <div class="flow-container">
+                <div class="flow-step">
+                    <span class="step-icon">📊</span>
+                    <span class="step-label">Share Cards</span>
+                </div>
+                <span class="flow-arrow">→</span>
+                <div class="flow-step">
+                    <span class="step-icon">🔗</span>
+                    <span class="step-label">Referral</span>
+                </div>
+                <span class="flow-arrow">→</span>
+                <div class="flow-step">
+                    <span class="step-icon">🗳️</span>
+                    <span class="step-label">Vote Campaign</span>
+                </div>
+                <span class="flow-arrow">→</span>
+                <div class="flow-step">
+                    <span class="step-icon">🌐</span>
+                    <span class="step-label">Network Effect</span>
+                </div>
+                <span class="flow-arrow">→</span>
+                <div class="flow-step">
+                    <span class="step-icon">🤖</span>
+                    <span class="step-label">AI Social</span>
+                </div>
+            </div>
+        </div>
+        <div class="reveal delay-2" style="max-width: min(90vw, 500px); margin-top: var(--content-gap);">
+            <div class="inferno-card highlight-card" style="text-align:center; padding: var(--content-gap);">
+                <div style="font-size: clamp(1.5rem, 3vw, 2.5rem); margin-bottom: 0.3rem;">🔄</div>
+                <div class="card-title" style="font-size: clamp(0.9rem, 1.5vw, 1.2rem);">Growth Flywheel</div>
+                <div class="card-desc" style="line-height:1.6;">
+                    Users share wins → New users join → More network value → More sharing → More votes
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="slide-number">10 / 14</div>
+</div>
+
+<!-- ==================== SLIDE 11: CURRENT PROGRESS ==================== -->
+<div class="slide" id="slide-11">
+    <div class="slide-content">
+        <h2 class="reveal">Current Progress</h2>
+        <p class="reveal delay-1 subtitle" style="margin-bottom: var(--content-gap);">SuiJarvis core stack: production-ready</p>
+        <ul class="checklist reveal delay-2">
+            <li><span class="check">✅</span> Sui Move Contracts <span class="small-text">(deployed testnet)</span></li>
+            <li><span class="check">✅</span> AI Strategy Engine</li>
+            <li><span class="check">✅</span> Risk Management System</li>
+            <li><span class="check">✅</span> Telegram Bot <span class="small-text">(18 commands)</span></li>
+            <li><span class="check">✅</span> Walrus Decentralized Logs</li>
+            <li><span class="check">✅</span> React Landing Page</li>
+            <li><span class="check">✅</span> Ecosystem API Interfaces</li>
+            <li><span class="check">✅</span> Viral Growth Modules</li>
+        </ul>
+        <div class="reveal delay-3" style="margin-top: var(--content-gap); text-align:center;">
+            <div class="tagline">"Not a concept - a working product being adapted."</div>
+        </div>
+    </div>
+    <div class="slide-number">11 / 14</div>
+</div>
+
+<!-- ==================== SLIDE 12: ROADMAP ==================== -->
+<div class="slide" id="slide-12">
+    <div class="slide-content">
+        <h2 class="reveal">10-Day Sprint</h2>
+        <div class="timeline reveal delay-1" style="max-width: min(90vw, 700px);">
+            <div class="timeline-item">
+                <span class="timeline-day">D1-2</span>
+                <span class="timeline-dot"></span>
+                <span class="timeline-desc">API integration + Move contract adaptation</span>
+            </div>
+            <div class="timeline-item">
+                <span class="timeline-day">D3-4</span>
+                <span class="timeline-dot"></span>
+                <span class="timeline-desc">Bot commands + Assembly monitoring</span>
+            </div>
+            <div class="timeline-item">
+                <span class="timeline-day">D5-6</span>
+                <span class="timeline-dot"></span>
+                <span class="timeline-desc">AI strategies + Ecosystem interfaces</span>
+            </div>
+            <div class="timeline-item">
+                <span class="timeline-day">D7</span>
+                <span class="timeline-dot"></span>
+                <span class="timeline-desc">Frontend redesign + Landing page</span>
+            </div>
+            <div class="timeline-item">
+                <span class="timeline-day">D8</span>
+                <span class="timeline-dot"></span>
+                <span class="timeline-desc">Deploy to Stillness + E2E testing</span>
+            </div>
+            <div class="timeline-item">
+                <span class="timeline-day">D9</span>
+                <span class="timeline-dot"></span>
+                <span class="timeline-desc">Demo video + Final submission</span>
+            </div>
+        </div>
+        <div class="priority-tags reveal delay-2">
+            <span class="p-tag p0">P0 Must Have</span>
+            <span class="p-tag p1">P1 Should Have</span>
+            <span class="p-tag p2">P2 Nice to Have</span>
+        </div>
+        <div class="reveal delay-3" style="margin-top: var(--element-gap);">
+            <div class="small-text" style="color: rgba(255,255,255,0.4);">P0: Status + Fuel Monitor + Contracts &nbsp;|&nbsp; P1: Auto Trade + Walrus Logs &nbsp;|&nbsp; P2: Gate Pricing + 3D Frontend</div>
+        </div>
+    </div>
+    <div class="slide-number">12 / 14</div>
+</div>
+
+<!-- ==================== SLIDE 13: TECH HIGHLIGHTS ==================== -->
+<div class="slide" id="slide-13">
+    <div class="slide-content">
+        <h2 class="reveal">Tech Highlights</h2>
+        <div class="grid-2x2 reveal delay-1" style="flex:1; max-height: 65vh;">
+            <div class="inferno-card highlight-card">
+                <div class="card-icon">🧠</div>
+                <div class="card-title">AI Decision Making</div>
+                <div class="card-desc">Autonomous fuel management, trade execution, and defense response. AI thinks so you don't have to.</div>
+            </div>
+            <div class="inferno-card highlight-card">
+                <div class="card-icon">📜</div>
+                <div class="card-title">Move Contract Safety</div>
+                <div class="card-desc"><span class="mono" style="color:#ff6b1a; font-size:inherit;">FuelBudget</span> + <span class="mono" style="color:#ff6b1a; font-size:inherit;">TradeLimit</span> + <span class="mono" style="color:#ff6b1a; font-size:inherit;">EmergencyBrake</span> - on-chain guardrails.</div>
+            </div>
+            <div class="inferno-card highlight-card">
+                <div class="card-icon">📝</div>
+                <div class="card-title">Walrus Audit Trail</div>
+                <div class="card-desc">Every AI decision stored immutably. Full context, parameters, results. "Why did AI do that?" - always answerable.</div>
+            </div>
+            <div class="inferno-card highlight-card">
+                <div class="card-icon">🤖</div>
+                <div class="card-title">1 Human + AI</div>
+                <div class="card-desc">80% AI-generated code. 100% human-supervised. Proving AI-augmented development works.</div>
+            </div>
+        </div>
+    </div>
+    <div class="slide-number">13 / 14</div>
+</div>
+
+<!-- ==================== SLIDE 14: TRY IT NOW ==================== -->
+<div class="slide" id="slide-14">
+    <div class="slide-content center">
+        <h2 class="reveal" style="font-size: var(--title-size);">Ready to Deploy</h2>
+        <div class="fire-divider reveal delay-1" style="margin: var(--content-gap) auto;"></div>
+        <div class="cta-grid reveal delay-2" style="max-width: min(90vw, 700px); width:100%;">
+            <a class="cta-card" href="https://t.me/EVENexusBot" target="_blank">
+                <div class="cta-icon">🤖</div>
+                <div class="cta-label">@EVENexusBot</div>
+                <div class="cta-desc">Telegram Bot</div>
+            </a>
+            <a class="cta-card" href="https://github.com/wrx1234/sui-hackathon" target="_blank">
+                <div class="cta-icon">📂</div>
+                <div class="cta-label">GitHub</div>
+                <div class="cta-desc">Source Code</div>
+            </a>
+            <a class="cta-card" href="https://nexus.w3xuan.xyz" target="_blank">
+                <div class="cta-icon">🌐</div>
+                <div class="cta-label">nexus.w3xuan.xyz</div>
+                <div class="cta-desc">Website</div>
+            </a>
+        </div>
+        <div class="reveal delay-3" style="margin-top: var(--content-gap);">
+            <div class="tagline" style="font-size: var(--h3-size);">"Your Assembly doesn't sleep. Neither does NEXUS."</div>
+        </div>
+        <div class="reveal delay-4" style="margin-top: var(--element-gap);">
+            <div class="subtitle">We'd love your feedback and vote! 🗳️</div>
+        </div>
+    </div>
+    <div class="slide-number">14 / 14</div>
+</div>
+
+<script>
+// ============================================
+// STAR FIELD
+// ============================================
+(function() {
+    const canvas = document.getElementById('starfield');
+    const ctx = canvas.getContext('2d');
+    let stars = [];
+    const STAR_COUNT = 200;
+
+    function resize() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+    }
+
+    function initStars() {
+        stars = [];
+        for (let i = 0; i < STAR_COUNT; i++) {
+            stars.push({
+                x: Math.random() * canvas.width,
+                y: Math.random() * canvas.height,
+                r: Math.random() * 1.5 + 0.3,
+                a: Math.random() * 0.8 + 0.2,
+                twinkle: Math.random() * Math.PI * 2,
+                speed: Math.random() * 0.005 + 0.002
+            });
+        }
+    }
+
+    function draw() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        for (const s of stars) {
+            s.twinkle += s.speed;
+            const alpha = s.a * (0.5 + 0.5 * Math.sin(s.twinkle));
+            ctx.beginPath();
+            ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+            ctx.fillStyle = `rgba(255, ${180 + Math.random() * 75}, ${150 + Math.random() * 105}, ${alpha})`;
+            ctx.fill();
+        }
+        requestAnimationFrame(draw);
+    }
+
+    resize();
+    initStars();
+    draw();
+    window.addEventListener('resize', () => { resize(); initStars(); });
+})();
+
+// ============================================
+// EMBER PARTICLES
+// ============================================
+(function() {
+    const canvas = document.getElementById('embers');
+    const ctx = canvas.getContext('2d');
+    let embers = [];
+    const EMBER_COUNT = 40;
+
+    function resize() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+    }
+
+    function spawnEmber() {
+        return {
+            x: Math.random() * canvas.width,
+            y: canvas.height + 10,
+            vx: (Math.random() - 0.5) * 0.5,
+            vy: -(Math.random() * 1.5 + 0.5),
+            r: Math.random() * 2 + 1,
+            life: 1,
+            decay: Math.random() * 0.003 + 0.002
+        };
+    }
+
+    function init() {
+        embers = [];
+        for (let i = 0; i < EMBER_COUNT; i++) {
+            const e = spawnEmber();
+            e.y = Math.random() * canvas.height;
+            e.life = Math.random();
+            embers.push(e);
+        }
+    }
+
+    function draw() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        for (let i = embers.length - 1; i >= 0; i--) {
+            const e = embers[i];
+            e.x += e.vx;
+            e.y += e.vy;
+            e.life -= e.decay;
+            if (e.life <= 0) {
+                embers[i] = spawnEmber();
+                continue;
+            }
+            ctx.beginPath();
+            ctx.arc(e.x, e.y, e.r * e.life, 0, Math.PI * 2);
+            const g = ctx.createRadialGradient(e.x, e.y, 0, e.x, e.y, e.r * e.life);
+            g.addColorStop(0, `rgba(255, 107, 26, ${e.life * 0.8})`);
+            g.addColorStop(1, `rgba(255, 45, 45, 0)`);
+            ctx.fillStyle = g;
+            ctx.fill();
+        }
+        requestAnimationFrame(draw);
+    }
+
+    resize();
+    init();
+    draw();
+    window.addEventListener('resize', () => { resize(); init(); });
+})();
+
+// ============================================
+// NAVIGATION
+// ============================================
+(function() {
+    const slides = document.querySelectorAll('.slide');
+    const totalSlides = slides.length;
+    const progressBar = document.getElementById('progress-bar');
+    const navDotsContainer = document.getElementById('nav-dots');
+    let currentSlide = 0;
+    let isScrolling = false;
+
+    // Create nav dots
+    for (let i = 0; i < totalSlides; i++) {
+        const dot = document.createElement('div');
+        dot.className = 'nav-dot' + (i === 0 ? ' active' : '');
+        dot.addEventListener('click', () => goToSlide(i));
+        navDotsContainer.appendChild(dot);
+    }
+
+    function goToSlide(index) {
+        if (index < 0 || index >= totalSlides || isScrolling) return;
+        isScrolling = true;
+        currentSlide = index;
+        slides[index].scrollIntoView({ behavior: 'smooth' });
+        updateUI();
+        setTimeout(() => { isScrolling = false; }, 800);
+    }
+
+    function updateUI() {
+        // Progress bar
+        const pct = ((currentSlide + 1) / totalSlides) * 100;
+        progressBar.style.width = pct + '%';
+
+        // Nav dots
+        document.querySelectorAll('.nav-dot').forEach((d, i) => {
+            d.classList.toggle('active', i === currentSlide);
+        });
+    }
+
+    // Keyboard navigation
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'ArrowDown' || e.key === 'ArrowRight' || e.key === ' ') {
+            e.preventDefault();
+            goToSlide(currentSlide + 1);
+        } else if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') {
+            e.preventDefault();
+            goToSlide(currentSlide - 1);
+        }
+    });
+
+    // Wheel navigation
+    let wheelTimeout;
+    document.addEventListener('wheel', (e) => {
+        e.preventDefault();
+        clearTimeout(wheelTimeout);
+        wheelTimeout = setTimeout(() => {
+            if (e.deltaY > 0) goToSlide(currentSlide + 1);
+            else goToSlide(currentSlide - 1);
+        }, 80);
+    }, { passive: false });
+
+    // Touch navigation
+    let touchStartY = 0;
+    document.addEventListener('touchstart', (e) => {
+        touchStartY = e.touches[0].clientY;
+    }, { passive: true });
+
+    document.addEventListener('touchend', (e) => {
+        const diff = touchStartY - e.changedTouches[0].clientY;
+        if (Math.abs(diff) > 50) {
+            if (diff > 0) goToSlide(currentSlide + 1);
+            else goToSlide(currentSlide - 1);
+        }
+    }, { passive: true });
+
+    // Scroll spy via IntersectionObserver
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                const idx = Array.from(slides).indexOf(entry.target);
+                if (idx !== -1) {
+                    currentSlide = idx;
+                    updateUI();
+                }
+            }
+        });
+    }, { threshold: 0.5 });
+
+    slides.forEach(s => observer.observe(s));
+})();
+
+// ============================================
+// REVEAL ANIMATIONS
+// ============================================
+(function() {
+    const reveals = document.querySelectorAll('.reveal');
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('visible');
+                // Trigger reuse bar animation
+                const bar = entry.target.querySelector('#reuse-bar') || (entry.target.id === 'reuse-bar' ? entry.target : null);
+                if (bar) bar.classList.add('visible');
+            }
+        });
+    }, { threshold: 0.2 });
+
+    reveals.forEach(r => observer.observe(r));
+
+    // Also observe the reuse bar container
+    const reuseBar = document.getElementById('reuse-bar');
+    if (reuseBar) {
+        const reuseObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) reuseBar.classList.add('visible');
+            });
+        }, { threshold: 0.2 });
+        reuseObserver.observe(reuseBar.parentElement);
+    }
+})();
+</script>
+</body>
+</html>

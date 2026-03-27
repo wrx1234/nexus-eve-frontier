@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NEXUS - Style C: Electric Studio</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800;900&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    width: 100vw; height: 100vh; overflow: hidden;
+    font-family: 'Inter', sans-serif;
+    background: #0a0a0a;
+    display: flex; align-items: center; justify-content: center;
+    color: #fff;
+  }
+
+  /* Central gradient orb */
+  .orb {
+    position: fixed; width: 600px; height: 600px;
+    top: 50%; left: 50%; transform: translate(-50%, -50%);
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(99,60,255,0.25), rgba(0,120,255,0.12), transparent 70%);
+    filter: blur(80px);
+    animation: orbPulse 6s ease-in-out infinite alternate;
+  }
+  @keyframes orbPulse {
+    from { transform: translate(-50%,-50%) scale(1); opacity: .7; }
+    to   { transform: translate(-50%,-50%) scale(1.15); opacity: 1; }
+  }
+
+  /* Hexagon decorations */
+  svg.hexagons {
+    position: fixed; inset: 0; width: 100%; height: 100%; z-index: 0;
+  }
+  .hex { fill: none; stroke: rgba(99,60,255,0.12); stroke-width: 1;
+    animation: hexFade 8s ease-in-out infinite; }
+  .hex:nth-child(2) { stroke: rgba(0,150,255,0.1); animation-delay: -2s; }
+  .hex:nth-child(3) { stroke: rgba(99,60,255,0.08); animation-delay: -4s; }
+  .hex:nth-child(4) { stroke: rgba(0,150,255,0.06); animation-delay: -6s; }
+  .hex:nth-child(5) { stroke: rgba(99,60,255,0.1); animation-delay: -1s; }
+  .hex:nth-child(6) { stroke: rgba(0,150,255,0.08); animation-delay: -3s; }
+  @keyframes hexFade { 0%,100% { opacity: .4; } 50% { opacity: 1; } }
+
+  .content {
+    position: relative; z-index: 1;
+    text-align: center;
+    max-width: 800px; width: 90%;
+  }
+
+  .badge {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-size: 12px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase;
+    color: rgba(255,255,255,0.5);
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 100px;
+    padding: 8px 20px;
+    margin-bottom: 40px;
+    animation: fadeUp 1s cubic-bezier(.16,1,.3,1) both;
+  }
+  .badge .indicator { width: 6px; height: 6px; border-radius: 50%;
+    background: linear-gradient(135deg, #633cff, #0096ff);
+    animation: pulse 2s ease-in-out infinite; }
+  @keyframes pulse { 50% { opacity: .4; transform: scale(.8); } }
+
+  h1 {
+    font-size: 104px; font-weight: 900; letter-spacing: -3px; line-height: 1;
+    background: linear-gradient(135deg, #fff 0%, #c4b5fd 50%, #60a5fa 100%);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    margin-bottom: 16px;
+    animation: fadeUp 1s cubic-bezier(.16,1,.3,1) .15s both;
+  }
+
+  .subtitle {
+    font-size: 16px; font-weight: 300; letter-spacing: 8px; text-transform: uppercase;
+    color: rgba(255,255,255,0.35);
+    margin-bottom: 36px;
+    animation: fadeUp 1s cubic-bezier(.16,1,.3,1) .3s both;
+  }
+
+  .divider {
+    width: 60px; height: 2px; margin: 0 auto 36px;
+    background: linear-gradient(90deg, #633cff, #0096ff);
+    border-radius: 2px;
+    animation: fadeUp 1s cubic-bezier(.16,1,.3,1) .4s both;
+  }
+
+  .desc {
+    font-size: 20px; font-weight: 400; color: rgba(255,255,255,0.55);
+    line-height: 1.6; margin-bottom: 56px;
+    animation: fadeUp 1s cubic-bezier(.16,1,.3,1) .5s both;
+  }
+
+  .footer {
+    display: flex; justify-content: center; gap: 40px; flex-wrap: wrap;
+    animation: fadeUp 1s cubic-bezier(.16,1,.3,1) .65s both;
+  }
+  .footer-item {
+    font-size: 13px; font-weight: 500; color: rgba(255,255,255,0.3);
+    display: flex; align-items: center; gap: 8px;
+  }
+  .footer-item .icon {
+    width: 28px; height: 28px; border-radius: 8px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.06);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px;
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(24px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+</style>
+</head>
+<body>
+  <div class="orb"></div>
+
+  <svg class="hexagons" viewBox="0 0 1920 1080" preserveAspectRatio="xMidYMid slice">
+    <polygon class="hex" points="200,200 260,165 320,200 320,270 260,305 200,270" />
+    <polygon class="hex" points="1600,150 1660,115 1720,150 1720,220 1660,255 1600,220" />
+    <polygon class="hex" points="150,700 210,665 270,700 270,770 210,805 150,770" />
+    <polygon class="hex" points="1650,750 1710,715 1770,750 1770,820 1710,855 1650,820" />
+    <polygon class="hex" points="900,80 960,45 1020,80 1020,150 960,185 900,150" />
+    <polygon class="hex" points="850,900 910,865 970,900 970,970 910,1005 850,970" />
+  </svg>
+
+  <div class="content">
+    <div class="badge">
+      <span class="indicator"></span>
+      EVE Frontier × Sui Hackathon 2026
+    </div>
+    <h1>NEXUS</h1>
+    <p class="subtitle">Neural EXecutive for Unified Stations</p>
+    <div class="divider"></div>
+    <p class="desc">Your 24/7 AI Assembly Manager for EVE Frontier</p>
+    <div class="footer">
+      <div class="footer-item"><span class="icon">⚡</span> Built by Xuan</div>
+      <div class="footer-item"><span class="icon">🤖</span> Powered by AI</div>
+    </div>
+  </div>
+</body>
+</html>

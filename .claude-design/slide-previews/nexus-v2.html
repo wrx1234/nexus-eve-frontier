@@ -1,0 +1,1629 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NEXUS - AI Assembly Manager for EVE Frontier</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+/* ============ RESET & BASE ============ */
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+html { scroll-snap-type: y mandatory; overflow-x: hidden; scroll-behavior: smooth; }
+body { font-family: 'Noto Sans SC', 'Inter', sans-serif; background: #f5f5f7; color: #1d1d1f; overflow-x: hidden; -webkit-font-smoothing: antialiased; }
+
+:root {
+  --red-primary: #ff2d2d;
+  --red-dark: #1a0505;
+  --red-gradient: linear-gradient(135deg, #1a0505 0%, #3a0a0a 40%, #ff2d2d 100%);
+  --white: #ffffff;
+  --gray-50: #f5f5f7;
+  --gray-100: #e8e8ed;
+  --gray-200: #d2d2d7;
+  --gray-400: #86868b;
+  --gray-600: #6e6e73;
+  --gray-800: #1d1d1f;
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.06);
+  --shadow-md: 0 4px 16px rgba(0,0,0,0.08);
+  --shadow-lg: 0 8px 32px rgba(0,0,0,0.1);
+  --shadow-card: 0 2px 12px rgba(0,0,0,0.06);
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+  --font-title: 'Inter', 'Noto Sans SC', sans-serif;
+  --font-body: 'Noto Sans SC', 'Inter', sans-serif;
+  --fs-hero: clamp(2.5rem, 5vw, 4.5rem);
+  --fs-h1: clamp(1.8rem, 3.5vw, 2.8rem);
+  --fs-h2: clamp(1.2rem, 2vw, 1.6rem);
+  --fs-h3: clamp(1rem, 1.5vw, 1.2rem);
+  --fs-body: clamp(0.8rem, 1.2vw, 1rem);
+  --fs-small: clamp(0.7rem, 1vw, 0.85rem);
+  --fs-tag: clamp(0.65rem, 0.8vw, 0.75rem);
+}
+
+/* ============ SLIDE BASE ============ */
+.slide {
+  width: 100vw;
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
+  scroll-snap-align: start;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.slide-content {
+  width: 90%;
+  max-width: 1200px;
+  height: 90%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  position: relative;
+  z-index: 2;
+}
+
+/* ============ COMMON ELEMENTS ============ */
+.section-title {
+  font-family: var(--font-title);
+  font-size: var(--fs-h1);
+  font-weight: 800;
+  color: var(--gray-800);
+  margin-bottom: clamp(16px, 2vh, 32px);
+  letter-spacing: -0.02em;
+}
+.section-title .red { color: var(--red-primary); }
+.section-subtitle {
+  font-size: var(--fs-body);
+  color: var(--gray-600);
+  margin-bottom: clamp(12px, 2vh, 24px);
+  line-height: 1.6;
+}
+.red-line {
+  width: 48px;
+  height: 4px;
+  background: var(--red-primary);
+  border-radius: 2px;
+  margin-bottom: clamp(12px, 1.5vh, 20px);
+}
+.card {
+  background: var(--white);
+  border-radius: var(--radius-md);
+  padding: clamp(12px, 1.5vw, 20px);
+  box-shadow: var(--shadow-card);
+  border: 1px solid rgba(0,0,0,0.04);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+.card:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
+.card-emoji {
+  font-size: clamp(1.2rem, 2vw, 1.8rem);
+  margin-bottom: 6px;
+}
+.card-title {
+  font-family: var(--font-title);
+  font-size: var(--fs-h3);
+  font-weight: 700;
+  color: var(--gray-800);
+  margin-bottom: 4px;
+}
+.card-desc {
+  font-size: var(--fs-small);
+  color: var(--gray-600);
+  line-height: 1.5;
+}
+.tag {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: var(--fs-tag);
+  font-weight: 500;
+  background: rgba(255,45,45,0.08);
+  color: var(--red-primary);
+  border: 1px solid rgba(255,45,45,0.15);
+}
+.tag-gray {
+  background: var(--gray-50);
+  color: var(--gray-600);
+  border: 1px solid var(--gray-200);
+}
+.grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: clamp(12px, 1.5vw, 20px); }
+.grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: clamp(12px, 1.5vw, 20px); }
+.grid-4 { display: grid; grid-template-columns: repeat(2, 1fr); gap: clamp(10px, 1.2vw, 16px); }
+
+/* ============ REVEAL ANIMATION ============ */
+.reveal {
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity 0.6s ease, transform 0.6s ease;
+}
+.reveal.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+.reveal-delay-1 { transition-delay: 0.1s; }
+.reveal-delay-2 { transition-delay: 0.2s; }
+.reveal-delay-3 { transition-delay: 0.3s; }
+.reveal-delay-4 { transition-delay: 0.4s; }
+.reveal-delay-5 { transition-delay: 0.5s; }
+
+/* ============ PROGRESS BAR ============ */
+#progress-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 3px;
+  background: var(--red-primary);
+  z-index: 1000;
+  transition: width 0.3s ease;
+}
+
+/* ============ NAV DOTS ============ */
+#nav-dots {
+  position: fixed;
+  right: 20px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  z-index: 1000;
+}
+.nav-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--gray-200);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: none;
+  padding: 0;
+}
+.nav-dot.active {
+  background: var(--red-primary);
+  transform: scale(1.4);
+}
+.nav-dot:hover { background: var(--red-primary); opacity: 0.7; }
+
+/* ============ SLIDE 1: COVER ============ */
+.slide-cover {
+  background: var(--white);
+  display: flex;
+  align-items: stretch;
+  justify-content: stretch;
+}
+.cover-left {
+  width: 45%;
+  background: linear-gradient(160deg, #0d0101 0%, #1a0505 30%, #4a0e0e 60%, #c42020 85%, #ff2d2d 100%);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: clamp(24px, 4vw, 60px);
+  position: relative;
+  overflow: hidden;
+}
+.cover-left::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  right: -30%;
+  width: 80%;
+  height: 80%;
+  background: radial-gradient(circle, rgba(255,45,45,0.3) 0%, transparent 70%);
+  animation: pulse-glow 4s ease-in-out infinite;
+}
+.cover-left::after {
+  content: '';
+  position: absolute;
+  bottom: -20%;
+  left: -20%;
+  width: 60%;
+  height: 60%;
+  background: radial-gradient(circle, rgba(255,100,100,0.15) 0%, transparent 60%);
+}
+@keyframes pulse-glow {
+  0%, 100% { opacity: 0.5; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.05); }
+}
+.cover-logo {
+  font-family: var(--font-title);
+  font-size: clamp(3.5rem, 7vw, 6rem);
+  font-weight: 900;
+  color: white;
+  letter-spacing: 0.15em;
+  position: relative;
+  z-index: 2;
+  text-shadow: 0 0 40px rgba(255,45,45,0.5);
+}
+.cover-logo-sub {
+  font-family: var(--font-title);
+  font-size: var(--fs-small);
+  color: rgba(255,255,255,0.7);
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  margin-top: 8px;
+  position: relative;
+  z-index: 2;
+  text-align: center;
+}
+.cover-right {
+  width: 55%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: clamp(24px, 5vw, 80px);
+  background: var(--white);
+}
+.cover-tagline {
+  font-family: var(--font-body);
+  font-size: clamp(1.4rem, 2.8vw, 2.2rem);
+  font-weight: 700;
+  color: var(--gray-800);
+  line-height: 1.4;
+  margin-bottom: clamp(12px, 2vh, 24px);
+}
+.cover-tagline .highlight {
+  color: var(--red-primary);
+}
+.cover-event {
+  font-size: var(--fs-body);
+  color: var(--gray-600);
+  margin-bottom: 8px;
+}
+.cover-team {
+  font-size: var(--fs-small);
+  color: var(--gray-400);
+  margin-top: clamp(16px, 3vh, 40px);
+}
+.cover-tags {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: clamp(12px, 2vh, 20px);
+}
+
+/* ============ SLIDE 2: TOC ============ */
+.toc-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: clamp(8px, 1vw, 16px);
+}
+.toc-item {
+  display: flex;
+  align-items: center;
+  gap: clamp(8px, 1vw, 12px);
+  padding: clamp(10px, 1.2vw, 16px);
+  background: var(--white);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-sm);
+  border-left: 3px solid var(--red-primary);
+  transition: transform 0.2s ease;
+}
+.toc-item:hover { transform: translateX(4px); }
+.toc-num {
+  font-family: var(--font-title);
+  font-size: var(--fs-h2);
+  font-weight: 800;
+  color: var(--red-primary);
+  min-width: 32px;
+}
+.toc-label {
+  font-size: var(--fs-small);
+  color: var(--gray-800);
+  font-weight: 500;
+}
+
+/* ============ SLIDE 3: PAIN POINTS ============ */
+.pain-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: clamp(10px, 1.2vw, 16px);
+}
+.pain-card {
+  background: var(--white);
+  border-radius: var(--radius-md);
+  padding: clamp(12px, 1.5vw, 20px);
+  box-shadow: var(--shadow-card);
+  border-top: 3px solid var(--red-primary);
+}
+.pain-emoji { font-size: clamp(1.4rem, 2.2vw, 2rem); margin-bottom: 6px; }
+.pain-title {
+  font-family: var(--font-title);
+  font-size: var(--fs-h3);
+  font-weight: 700;
+  color: var(--gray-800);
+  margin-bottom: 4px;
+}
+.pain-desc { font-size: var(--fs-small); color: var(--gray-600); line-height: 1.5; }
+.pain-bottom {
+  margin-top: clamp(12px, 1.5vh, 20px);
+  padding: clamp(10px, 1.2vw, 16px);
+  background: linear-gradient(135deg, rgba(255,45,45,0.06), rgba(255,45,45,0.02));
+  border-radius: var(--radius-sm);
+  border-left: 3px solid var(--red-primary);
+}
+.pain-bottom p {
+  font-size: var(--fs-small);
+  color: var(--gray-800);
+  font-weight: 500;
+}
+
+/* ============ SLIDE 4: SOLUTION ============ */
+.solution-center {
+  text-align: center;
+  margin-bottom: clamp(16px, 2vh, 28px);
+}
+.solution-diagram {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(12px, 2vw, 32px);
+  margin-bottom: clamp(16px, 2vh, 28px);
+}
+.solution-box {
+  background: var(--white);
+  border-radius: var(--radius-lg);
+  padding: clamp(16px, 2vw, 28px) clamp(20px, 2.5vw, 36px);
+  box-shadow: var(--shadow-md);
+  text-align: center;
+  border: 2px solid transparent;
+  transition: border-color 0.3s ease;
+  min-width: 180px;
+}
+.solution-box:hover { border-color: var(--red-primary); }
+.solution-box .emoji { font-size: clamp(1.8rem, 3vw, 2.5rem); margin-bottom: 8px; }
+.solution-box .title {
+  font-family: var(--font-title);
+  font-size: var(--fs-h3);
+  font-weight: 700;
+  color: var(--gray-800);
+  margin-bottom: 4px;
+}
+.solution-box .desc { font-size: var(--fs-small); color: var(--gray-600); }
+.solution-arrow {
+  font-size: clamp(1rem, 2vw, 1.5rem);
+  color: var(--gray-200);
+}
+.solution-tagline {
+  text-align: center;
+  font-size: var(--fs-body);
+  color: var(--gray-400);
+  font-style: italic;
+  margin-top: clamp(8px, 1vh, 16px);
+}
+
+/* ============ SLIDES 5-6: FEATURES ============ */
+.feature-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: clamp(12px, 1.5vw, 20px);
+}
+.feature-card {
+  background: var(--white);
+  border-radius: var(--radius-md);
+  padding: clamp(16px, 2vw, 24px);
+  box-shadow: var(--shadow-card);
+  display: flex;
+  gap: clamp(10px, 1.2vw, 16px);
+  align-items: flex-start;
+  border: 1px solid rgba(0,0,0,0.04);
+}
+.feature-icon {
+  width: clamp(40px, 4vw, 52px);
+  height: clamp(40px, 4vw, 52px);
+  border-radius: var(--radius-sm);
+  background: rgba(255,45,45,0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: clamp(1.1rem, 1.8vw, 1.5rem);
+  flex-shrink: 0;
+}
+.feature-text .title {
+  font-family: var(--font-title);
+  font-size: var(--fs-h3);
+  font-weight: 700;
+  color: var(--gray-800);
+  margin-bottom: 4px;
+}
+.feature-text .desc { font-size: var(--fs-small); color: var(--gray-600); line-height: 1.5; }
+
+/* ============ SLIDE 7: ARCHITECTURE ============ */
+.arch-stack {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(6px, 0.8vh, 10px);
+  align-items: center;
+}
+.arch-layer {
+  width: 100%;
+  max-width: 800px;
+  background: var(--white);
+  border-radius: var(--radius-md);
+  padding: clamp(10px, 1.2vw, 16px) clamp(16px, 2vw, 24px);
+  box-shadow: var(--shadow-card);
+  display: flex;
+  align-items: center;
+  gap: clamp(10px, 1.5vw, 16px);
+  position: relative;
+}
+.arch-layer::after {
+  content: '↓';
+  position: absolute;
+  bottom: calc(clamp(-6px, -0.8vh, -10px) - 4px);
+  left: 50%;
+  transform: translateX(-50%);
+  color: var(--red-primary);
+  font-size: var(--fs-body);
+  z-index: 3;
+}
+.arch-layer:last-child::after { display: none; }
+.arch-num {
+  width: clamp(28px, 3vw, 36px);
+  height: clamp(28px, 3vw, 36px);
+  border-radius: 50%;
+  background: var(--red-primary);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-title);
+  font-weight: 700;
+  font-size: var(--fs-small);
+  flex-shrink: 0;
+}
+.arch-info { flex: 1; }
+.arch-info .name {
+  font-family: var(--font-title);
+  font-size: var(--fs-h3);
+  font-weight: 700;
+  color: var(--gray-800);
+}
+.arch-info .detail { font-size: var(--fs-small); color: var(--gray-600); }
+.arch-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  justify-content: center;
+  margin-top: clamp(10px, 1.2vh, 16px);
+}
+.arch-tag {
+  padding: 4px 12px;
+  background: var(--gray-800);
+  color: white;
+  border-radius: 4px;
+  font-family: 'Inter', monospace;
+  font-size: var(--fs-tag);
+  font-weight: 600;
+}
+
+/* ============ SLIDE 8: CONTRACT ============ */
+.contract-table-wrap {
+  background: var(--white);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-card);
+  overflow: hidden;
+  margin-bottom: clamp(12px, 1.5vh, 20px);
+}
+.contract-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--fs-small);
+}
+.contract-table th {
+  background: var(--gray-800);
+  color: white;
+  padding: clamp(8px, 1vw, 12px) clamp(12px, 1.5vw, 20px);
+  text-align: left;
+  font-family: var(--font-title);
+  font-weight: 700;
+  font-size: var(--fs-small);
+}
+.contract-table td {
+  padding: clamp(6px, 0.8vw, 10px) clamp(12px, 1.5vw, 20px);
+  border-bottom: 1px solid var(--gray-100);
+  color: var(--gray-800);
+}
+.contract-table tr:last-child td { border-bottom: none; }
+.contract-table .arrow { color: var(--red-primary); font-weight: 700; text-align: center; }
+.contract-modules {
+  display: flex;
+  gap: clamp(8px, 1vw, 12px);
+  flex-wrap: wrap;
+}
+.contract-module {
+  padding: clamp(8px, 1vw, 12px) clamp(12px, 1.5vw, 20px);
+  background: var(--white);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-sm);
+  font-family: 'Inter', monospace;
+  font-size: var(--fs-small);
+  font-weight: 600;
+  color: var(--red-primary);
+  border: 1px solid rgba(255,45,45,0.15);
+}
+
+/* ============ SLIDE 9: HACKATHON FIT ============ */
+.fit-flow {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(8px, 1vh, 14px);
+  margin-bottom: clamp(16px, 2vh, 24px);
+}
+.fit-step {
+  display: flex;
+  align-items: center;
+  gap: clamp(10px, 1.5vw, 16px);
+  background: var(--white);
+  border-radius: var(--radius-md);
+  padding: clamp(12px, 1.5vw, 18px);
+  box-shadow: var(--shadow-sm);
+}
+.fit-arrow { color: var(--red-primary); font-size: var(--fs-h2); font-weight: 700; }
+.fit-text { font-size: var(--fs-body); color: var(--gray-800); font-weight: 500; }
+.fit-awards {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: clamp(12px, 1.5vw, 20px);
+}
+.award-card {
+  background: var(--white);
+  border-radius: var(--radius-md);
+  padding: clamp(14px, 1.8vw, 22px);
+  box-shadow: var(--shadow-card);
+  border-left: 4px solid var(--red-primary);
+}
+.award-card .emoji { font-size: clamp(1.4rem, 2vw, 1.8rem); margin-bottom: 6px; }
+.award-card .title {
+  font-family: var(--font-title);
+  font-size: var(--fs-h3);
+  font-weight: 700;
+  color: var(--gray-800);
+  margin-bottom: 4px;
+}
+.award-card .desc { font-size: var(--fs-small); color: var(--gray-600); line-height: 1.5; }
+
+/* ============ SLIDE 10: REUSE ============ */
+.reuse-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: clamp(8px, 1vw, 14px);
+  margin-bottom: clamp(12px, 1.5vh, 20px);
+}
+.reuse-item {
+  background: var(--white);
+  border-radius: var(--radius-sm);
+  padding: clamp(10px, 1.2vw, 16px);
+  box-shadow: var(--shadow-sm);
+}
+.reuse-label {
+  font-size: var(--fs-small);
+  font-weight: 500;
+  color: var(--gray-800);
+  margin-bottom: 6px;
+  display: flex;
+  justify-content: space-between;
+}
+.reuse-label span { color: var(--red-primary); font-weight: 700; }
+.reuse-bar {
+  height: 6px;
+  background: var(--gray-100);
+  border-radius: 3px;
+  overflow: hidden;
+}
+.reuse-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--red-primary), #ff6b6b);
+  border-radius: 3px;
+  transition: width 1s ease;
+}
+.reuse-bottom {
+  text-align: center;
+  padding: clamp(10px, 1.2vw, 16px);
+  background: var(--white);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-sm);
+}
+.reuse-bottom p {
+  font-size: var(--fs-small);
+  color: var(--gray-600);
+}
+.reuse-bottom .highlight {
+  color: var(--red-primary);
+  font-weight: 700;
+}
+
+/* ============ SLIDE 11: ECOSYSTEM ============ */
+.eco-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: clamp(6px, 0.8vw, 10px);
+}
+.eco-card {
+  background: var(--white);
+  border-radius: var(--radius-sm);
+  padding: clamp(8px, 1vw, 14px);
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  gap: clamp(8px, 1vw, 12px);
+  align-items: flex-start;
+}
+.eco-card .name {
+  font-family: var(--font-title);
+  font-size: var(--fs-small);
+  font-weight: 700;
+  color: var(--red-primary);
+  margin-bottom: 2px;
+}
+.eco-card .help { font-size: var(--fs-tag); color: var(--gray-600); line-height: 1.4; }
+.eco-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  background: rgba(255,45,45,0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.9rem;
+  flex-shrink: 0;
+}
+.eco-bottom {
+  margin-top: clamp(8px, 1vh, 14px);
+  text-align: center;
+  font-size: var(--fs-small);
+  color: var(--gray-400);
+  font-style: italic;
+}
+
+/* ============ SLIDE 12: VIRAL ============ */
+.viral-flow {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: clamp(8px, 1vw, 14px);
+}
+.viral-step {
+  background: var(--white);
+  border-radius: var(--radius-md);
+  padding: clamp(12px, 1.5vw, 18px);
+  box-shadow: var(--shadow-card);
+  text-align: center;
+  position: relative;
+}
+.viral-step::after {
+  content: '→';
+  position: absolute;
+  right: calc(clamp(-8px, -1vw, -14px) - 4px);
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--red-primary);
+  font-weight: 700;
+  font-size: var(--fs-body);
+  z-index: 3;
+}
+.viral-step:last-child::after { display: none; }
+.viral-step .emoji { font-size: clamp(1.4rem, 2.2vw, 2rem); margin-bottom: 6px; }
+.viral-step .title {
+  font-family: var(--font-title);
+  font-size: var(--fs-small);
+  font-weight: 700;
+  color: var(--gray-800);
+  margin-bottom: 4px;
+}
+.viral-step .desc { font-size: var(--fs-tag); color: var(--gray-600); line-height: 1.4; }
+
+/* ============ SLIDE 13: PROGRESS ============ */
+.progress-cols {
+  display: grid;
+  grid-template-columns: 1.5fr 1fr;
+  gap: clamp(16px, 2vw, 28px);
+}
+.progress-col h3 {
+  font-family: var(--font-title);
+  font-size: var(--fs-h3);
+  font-weight: 700;
+  color: var(--gray-800);
+  margin-bottom: clamp(8px, 1vh, 14px);
+}
+.progress-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(4px, 0.6vh, 8px);
+}
+.progress-list li {
+  font-size: var(--fs-small);
+  color: var(--gray-600);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: clamp(6px, 0.8vw, 10px) clamp(8px, 1vw, 12px);
+  background: var(--white);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-sm);
+}
+.progress-list li .check { color: #34c759; font-weight: 700; }
+.progress-list li .wip { color: #ff9500; font-weight: 700; }
+
+/* ============ SLIDE 14: ROADMAP ============ */
+.roadmap-timeline {
+  display: flex;
+  gap: clamp(4px, 0.5vw, 8px);
+  margin-bottom: clamp(16px, 2vh, 24px);
+  position: relative;
+}
+.roadmap-timeline::before {
+  content: '';
+  position: absolute;
+  top: clamp(18px, 2vw, 24px);
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--gray-200);
+}
+.roadmap-item {
+  flex: 1;
+  text-align: center;
+  position: relative;
+}
+.roadmap-dot {
+  width: clamp(10px, 1.2vw, 14px);
+  height: clamp(10px, 1.2vw, 14px);
+  border-radius: 50%;
+  background: var(--red-primary);
+  margin: 0 auto clamp(6px, 0.8vh, 10px);
+  position: relative;
+  z-index: 2;
+}
+.roadmap-day {
+  font-family: var(--font-title);
+  font-size: var(--fs-tag);
+  font-weight: 700;
+  color: var(--gray-800);
+  margin-bottom: 2px;
+}
+.roadmap-task { font-size: var(--fs-tag); color: var(--gray-600); line-height: 1.3; }
+.mvp-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: clamp(10px, 1.2vw, 16px);
+}
+.mvp-card {
+  background: var(--white);
+  border-radius: var(--radius-sm);
+  padding: clamp(10px, 1.2vw, 16px);
+  box-shadow: var(--shadow-sm);
+}
+.mvp-card .priority {
+  font-family: var(--font-title);
+  font-size: var(--fs-small);
+  font-weight: 800;
+  margin-bottom: 6px;
+}
+.mvp-card .priority.p0 { color: var(--red-primary); }
+.mvp-card .priority.p1 { color: #ff9500; }
+.mvp-card .priority.p2 { color: #34c759; }
+.mvp-card .items { font-size: var(--fs-tag); color: var(--gray-600); line-height: 1.5; }
+
+/* ============ SLIDE 15: HIGHLIGHTS ============ */
+.highlights-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: clamp(12px, 1.5vw, 20px);
+}
+.highlight-card {
+  background: var(--white);
+  border-radius: var(--radius-lg);
+  padding: clamp(16px, 2vw, 28px);
+  box-shadow: var(--shadow-card);
+  border: 1px solid rgba(0,0,0,0.04);
+}
+.highlight-card .emoji {
+  font-size: clamp(1.6rem, 2.5vw, 2.2rem);
+  margin-bottom: 8px;
+}
+.highlight-card .title {
+  font-family: var(--font-title);
+  font-size: var(--fs-h3);
+  font-weight: 700;
+  color: var(--gray-800);
+  margin-bottom: 6px;
+}
+.highlight-card .desc { font-size: var(--fs-small); color: var(--gray-600); line-height: 1.6; }
+
+/* ============ SLIDE 16: CTA ============ */
+.slide-cta {
+  background: var(--white);
+  text-align: center;
+}
+.cta-title {
+  font-family: var(--font-title);
+  font-size: var(--fs-hero);
+  font-weight: 900;
+  color: var(--gray-800);
+  margin-bottom: clamp(12px, 2vh, 24px);
+}
+.cta-links {
+  display: flex;
+  justify-content: center;
+  gap: clamp(16px, 3vw, 32px);
+  margin-bottom: clamp(16px, 3vh, 32px);
+}
+.cta-link {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: clamp(16px, 2vw, 24px) clamp(24px, 3vw, 40px);
+  background: var(--gray-50);
+  border-radius: var(--radius-lg);
+  text-decoration: none;
+  color: var(--gray-800);
+  transition: all 0.3s ease;
+  box-shadow: var(--shadow-sm);
+}
+.cta-link:hover { transform: translateY(-4px); box-shadow: var(--shadow-md); background: var(--white); }
+.cta-link .emoji { font-size: clamp(1.8rem, 3vw, 2.5rem); }
+.cta-link .label { font-size: var(--fs-body); font-weight: 600; }
+.cta-tagline {
+  font-size: var(--fs-h2);
+  color: var(--gray-600);
+  margin-bottom: 8px;
+}
+.cta-tagline .red { color: var(--red-primary); font-weight: 700; }
+.cta-vote {
+  font-size: var(--fs-h2);
+  color: var(--gray-400);
+  margin-top: clamp(8px, 1.5vh, 16px);
+}
+
+/* ============ RESPONSIVE ============ */
+@media (max-width: 900px) {
+  .cover-left, .cover-right { width: 100%; }
+  .slide-cover { flex-direction: column; }
+  .slide-cover .slide-content { width: 100%; height: 100%; }
+  .cover-left { height: 40%; padding: 20px; }
+  .cover-right { height: 60%; padding: 20px; }
+  .pain-grid { grid-template-columns: repeat(2, 1fr); }
+  .toc-grid { grid-template-columns: repeat(2, 1fr); }
+  .viral-flow { grid-template-columns: repeat(3, 1fr); }
+  .viral-step:nth-child(3)::after { display: none; }
+  .eco-grid { grid-template-columns: 1fr; }
+  .solution-diagram { flex-direction: column; }
+  .solution-arrow { transform: rotate(90deg); }
+}
+@media (max-width: 600px) {
+  .pain-grid, .feature-grid, .highlights-grid, .fit-awards, .reuse-grid, .mvp-grid { grid-template-columns: 1fr; }
+  .viral-flow { grid-template-columns: repeat(2, 1fr); }
+  .progress-cols { grid-template-columns: 1fr; }
+  .roadmap-timeline { flex-wrap: wrap; }
+}
+@media (max-height: 700px) {
+  .slide-content { height: 94%; }
+  .section-title { margin-bottom: clamp(8px, 1vh, 16px); }
+}
+@media (max-height: 600px) {
+  .card, .pain-card, .feature-card { padding: clamp(6px, 1vw, 10px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .reveal { transition: none; opacity: 1; transform: none; }
+  .cover-left::before { animation: none; }
+}
+
+/* ============ SLIDE NUMBER ============ */
+.slide-number {
+  position: absolute;
+  bottom: clamp(8px, 1.5vh, 16px);
+  right: clamp(16px, 2vw, 24px);
+  font-family: var(--font-title);
+  font-size: var(--fs-tag);
+  color: var(--gray-400);
+  z-index: 5;
+}
+</style>
+</head>
+<body>
+
+<!-- Progress Bar -->
+<div id="progress-bar"></div>
+
+<!-- Nav Dots -->
+<nav id="nav-dots"></nav>
+
+<!-- ============ SLIDE 1: COVER ============ -->
+<section class="slide slide-cover" id="slide-1">
+  <div class="cover-left">
+    <div class="cover-logo reveal">NEXUS</div>
+    <div class="cover-logo-sub reveal reveal-delay-1">Neural EXecutive for Unified Stations</div>
+  </div>
+  <div class="cover-right">
+    <div class="cover-tagline reveal reveal-delay-2">
+      你的 <span class="highlight">24/7</span><br>AI 太空基地管家
+    </div>
+    <div class="cover-event reveal reveal-delay-3">EVE Frontier × Sui Hackathon 2026</div>
+    <div class="cover-tags reveal reveal-delay-4">
+      <span class="tag">Smart Assembly</span>
+      <span class="tag">AI Agent</span>
+      <span class="tag">Sui Move</span>
+      <span class="tag">Telegram Bot</span>
+    </div>
+    <div class="cover-team reveal reveal-delay-5">Team: Xuan · AI 协作</div>
+  </div>
+  <div class="slide-number">01 / 16</div>
+</section>
+
+<!-- ============ SLIDE 2: TOC ============ -->
+<section class="slide" id="slide-2" style="background: var(--gray-50);">
+  <div class="slide-content">
+    <div class="red-line reveal"></div>
+    <div class="section-title reveal">目录 <span class="red">Overview</span></div>
+    <div class="toc-grid">
+      <div class="toc-item reveal reveal-delay-1"><span class="toc-num">01</span><span class="toc-label">封面</span></div>
+      <div class="toc-item reveal reveal-delay-1"><span class="toc-num">02</span><span class="toc-label">目录</span></div>
+      <div class="toc-item reveal reveal-delay-1"><span class="toc-num">03</span><span class="toc-label">问题与痛点</span></div>
+      <div class="toc-item reveal reveal-delay-2"><span class="toc-num">04</span><span class="toc-label">解决方案概述</span></div>
+      <div class="toc-item reveal reveal-delay-2"><span class="toc-num">05</span><span class="toc-label">核心功能 (上)</span></div>
+      <div class="toc-item reveal reveal-delay-2"><span class="toc-num">06</span><span class="toc-label">核心功能 (下)</span></div>
+      <div class="toc-item reveal reveal-delay-3"><span class="toc-num">07</span><span class="toc-label">技术架构</span></div>
+      <div class="toc-item reveal reveal-delay-3"><span class="toc-num">08</span><span class="toc-label">Move 合约设计</span></div>
+      <div class="toc-item reveal reveal-delay-3"><span class="toc-num">09</span><span class="toc-label">黑客松契合度</span></div>
+      <div class="toc-item reveal reveal-delay-4"><span class="toc-num">10</span><span class="toc-label">SuiJarvis 复用优势</span></div>
+      <div class="toc-item reveal reveal-delay-4"><span class="toc-num">11</span><span class="toc-label">生态赋能</span></div>
+      <div class="toc-item reveal reveal-delay-4"><span class="toc-num">12</span><span class="toc-label">病毒裂变</span></div>
+      <div class="toc-item reveal reveal-delay-5"><span class="toc-num">13</span><span class="toc-label">当前进度</span></div>
+      <div class="toc-item reveal reveal-delay-5"><span class="toc-num">14</span><span class="toc-label">开发路线图</span></div>
+      <div class="toc-item reveal reveal-delay-5"><span class="toc-num">15</span><span class="toc-label">技术亮点</span></div>
+    </div>
+  </div>
+  <div class="slide-number">02 / 16</div>
+</section>
+
+<!-- ============ SLIDE 3: PAIN POINTS ============ -->
+<section class="slide" id="slide-3" style="background: var(--white);">
+  <div class="slide-content">
+    <div class="red-line reveal"></div>
+    <div class="section-title reveal">玩家面临的<span class="red">真实痛点</span></div>
+    <div class="pain-grid">
+      <div class="pain-card reveal reveal-delay-1">
+        <div class="pain-emoji">⛽</div>
+        <div class="pain-title">燃料焦虑</div>
+        <div class="pain-desc">燃料耗尽 = 功能停摆，错过一次可能丢失关键窗口</div>
+      </div>
+      <div class="pain-card reveal reveal-delay-2">
+        <div class="pain-emoji">🔄</div>
+        <div class="pain-title">管理地狱</div>
+        <div class="pain-desc">Gate + Storage + Turret + Node，逐个手动检查不可扩展</div>
+      </div>
+      <div class="pain-card reveal reveal-delay-3">
+        <div class="pain-emoji">💸</div>
+        <div class="pain-title">时机错失</div>
+        <div class="pain-desc">离线时错过最优交易价格，收益大打折扣</div>
+      </div>
+      <div class="pain-card reveal reveal-delay-3">
+        <div class="pain-emoji">🛡️</div>
+        <div class="pain-title">防御迟缓</div>
+        <div class="pain-desc">被攻击时不在线，无法调整策略，损失不可避免</div>
+      </div>
+      <div class="pain-card reveal reveal-delay-4">
+        <div class="pain-emoji">📊</div>
+        <div class="pain-title">信息分散</div>
+        <div class="pain-desc">状态散落不同界面，缺少统一视图</div>
+      </div>
+      <div class="pain-card reveal reveal-delay-5">
+        <div class="pain-emoji">🌙</div>
+        <div class="pain-title">全天候不可能</div>
+        <div class="pain-desc">太空不会因为你睡觉而停止运转</div>
+      </div>
+    </div>
+    <div class="pain-bottom reveal reveal-delay-5">
+      <p>核心矛盾: <strong>Smart Assembly 需要持续管理，但人的注意力有限</strong></p>
+    </div>
+  </div>
+  <div class="slide-number">03 / 16</div>
+</section>
+
+<!-- ============ SLIDE 4: SOLUTION ============ -->
+<section class="slide" id="slide-4" style="background: var(--gray-50);">
+  <div class="slide-content">
+    <div class="red-line reveal"></div>
+    <div class="section-title reveal"><span class="red">NEXUS</span> - 你的 AI 基地管家</div>
+    <div class="section-subtitle reveal">Telegram Bot + AI 决策引擎 + Sui Move 合约 + 链上监控</div>
+    <div class="solution-diagram">
+      <div class="solution-box reveal reveal-delay-1">
+        <div class="emoji">🤖</div>
+        <div class="title">AI 决策引擎</div>
+        <div class="desc">自主分析，自动执行</div>
+      </div>
+      <div class="solution-arrow reveal reveal-delay-2">⟷</div>
+      <div class="solution-box reveal reveal-delay-2">
+        <div class="emoji">📱</div>
+        <div class="title">Telegram Bot</div>
+        <div class="desc">随时随地管理</div>
+      </div>
+      <div class="solution-arrow reveal reveal-delay-3">⟷</div>
+      <div class="solution-box reveal reveal-delay-3">
+        <div class="emoji">📜</div>
+        <div class="title">Sui Move 合约</div>
+        <div class="desc">链上安全保障</div>
+      </div>
+    </div>
+    <div class="solution-tagline reveal reveal-delay-4">"你的 Assembly 不需要你盯着"</div>
+  </div>
+  <div class="slide-number">04 / 16</div>
+</section>
+
+<!-- ============ SLIDE 5: FEATURES PART 1 ============ -->
+<section class="slide" id="slide-5" style="background: var(--white);">
+  <div class="slide-content">
+    <div class="red-line reveal"></div>
+    <div class="section-title reveal">核心功能 <span class="red">(上)</span></div>
+    <div class="feature-grid">
+      <div class="feature-card reveal reveal-delay-1">
+        <div class="feature-icon">📊</div>
+        <div class="feature-text">
+          <div class="title">Assembly 仪表盘</div>
+          <div class="desc">/status 一键查看所有 Assembly 燃料、状态、收益汇总，全局视图一目了然</div>
+        </div>
+      </div>
+      <div class="feature-card reveal reveal-delay-2">
+        <div class="feature-icon">⛽</div>
+        <div class="feature-text">
+          <div class="title">智能燃料管理</div>
+          <div class="desc">监控燃料水位，低于阈值自动补充，支持自定义告警线，永不断供</div>
+        </div>
+      </div>
+      <div class="feature-card reveal reveal-delay-3">
+        <div class="feature-icon">💰</div>
+        <div class="feature-text">
+          <div class="title">自动化交易</div>
+          <div class="desc">AI 策略引擎在 Storage 上自动挂单/成交，趋势跟踪 + 均值回归捕捉最优价格</div>
+        </div>
+      </div>
+      <div class="feature-card reveal reveal-delay-4">
+        <div class="feature-icon">🛡️</div>
+        <div class="feature-text">
+          <div class="title">防御预警系统</div>
+          <div class="desc">监听链上攻击事件，实时推送 Telegram 告警，建议防御方案</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="slide-number">05 / 16</div>
+</section>
+
+<!-- ============ SLIDE 6: FEATURES PART 2 ============ -->
+<section class="slide" id="slide-6" style="background: var(--gray-50);">
+  <div class="slide-content">
+    <div class="red-line reveal"></div>
+    <div class="section-title reveal">核心功能 <span class="red">(下)</span></div>
+    <div class="feature-grid">
+      <div class="feature-card reveal reveal-delay-1">
+        <div class="feature-icon">🚪</div>
+        <div class="feature-text">
+          <div class="title">Gate 通行管理</div>
+          <div class="desc">白名单/黑名单/收费策略，支持动态定价，智能流量管控</div>
+        </div>
+      </div>
+      <div class="feature-card reveal reveal-delay-2">
+        <div class="feature-icon">📈</div>
+        <div class="feature-text">
+          <div class="title">收益追踪</div>
+          <div class="desc">每日/每周报告: 燃料成本、交易利润、通行费收入，清晰掌握 ROI</div>
+        </div>
+      </div>
+      <div class="feature-card reveal reveal-delay-3">
+        <div class="feature-icon">📝</div>
+        <div class="feature-text">
+          <div class="title">Walrus 审计日志</div>
+          <div class="desc">所有 AI 决策上传 Walrus 去中心化存储，不可篡改，完全可审计</div>
+        </div>
+      </div>
+      <div class="feature-card reveal reveal-delay-4">
+        <div class="feature-icon">💬</div>
+        <div class="feature-text">
+          <div class="title">自然语言指令</div>
+          <div class="desc">"把 Gate 通行费提高 20%" - 用人话管理 Assembly，零学习成本</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="slide-number">06 / 16</div>
+</section>
+
+<!-- ============ SLIDE 7: ARCHITECTURE ============ -->
+<section class="slide" id="slide-7" style="background: var(--white);">
+  <div class="slide-content">
+    <div class="red-line reveal"></div>
+    <div class="section-title reveal">技术架构 <span class="red">Architecture</span></div>
+    <div class="arch-stack">
+      <div class="arch-layer reveal reveal-delay-1">
+        <div class="arch-num">1</div>
+        <div class="arch-info">
+          <div class="name">Telegram Bot 层</div>
+          <div class="detail">用户交互: 18+ 命令、50+ 回调、告警推送、自然语言解析</div>
+        </div>
+      </div>
+      <div class="arch-layer reveal reveal-delay-2">
+        <div class="arch-num">2</div>
+        <div class="arch-info">
+          <div class="name">AI 决策引擎</div>
+          <div class="detail">策略决策: 燃料管理 / 自动交易 / 防御响应 / Gate 定价</div>
+        </div>
+      </div>
+      <div class="arch-layer reveal reveal-delay-3">
+        <div class="arch-num">3</div>
+        <div class="arch-info">
+          <div class="name">Sui Move 合约层</div>
+          <div class="detail">AssemblyManager / FuelBudget / TradeLimit / EmergencyBrake</div>
+        </div>
+      </div>
+      <div class="arch-layer reveal reveal-delay-4">
+        <div class="arch-num">4</div>
+        <div class="arch-info">
+          <div class="name">EVE Frontier 世界</div>
+          <div class="detail">GraphQL API + Events 监控 + Assembly 状态同步 + 资源价格</div>
+        </div>
+      </div>
+      <div class="arch-layer reveal reveal-delay-5">
+        <div class="arch-num">5</div>
+        <div class="arch-info">
+          <div class="name">Walrus 存储</div>
+          <div class="detail">不可篡改审计日志: 操作记录、策略快照、决策上下文</div>
+        </div>
+      </div>
+    </div>
+    <div class="arch-tags reveal reveal-delay-5">
+      <span class="arch-tag">Move</span>
+      <span class="arch-tag">TypeScript</span>
+      <span class="arch-tag">Sui</span>
+      <span class="arch-tag">Walrus</span>
+      <span class="arch-tag">GraphQL</span>
+    </div>
+  </div>
+  <div class="slide-number">07 / 16</div>
+</section>
+
+<!-- ============ SLIDE 8: CONTRACT ============ -->
+<section class="slide" id="slide-8" style="background: var(--gray-50);">
+  <div class="slide-content">
+    <div class="red-line reveal"></div>
+    <div class="section-title reveal">Move 合约设计 <span class="red">Contract</span></div>
+    <div class="section-subtitle reveal">从 SuiJarvis Vault 改造映射</div>
+    <div class="contract-table-wrap reveal reveal-delay-1">
+      <table class="contract-table">
+        <thead>
+          <tr><th>SuiJarvis</th><th></th><th>NEXUS</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>deposit / withdraw</td><td class="arrow">→</td><td>fuel_deposit / fuel_withdraw</td></tr>
+          <tr><td>strategy_execute</td><td class="arrow">→</td><td>assembly_operate</td></tr>
+          <tr><td>risk_check</td><td class="arrow">→</td><td>safety_check</td></tr>
+          <tr><td>owner_cap</td><td class="arrow">→</td><td>manager_cap</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="section-subtitle reveal reveal-delay-2" style="font-weight:600; color: var(--gray-800);">核心模块</div>
+    <div class="contract-modules reveal reveal-delay-3">
+      <span class="contract-module">AssemblyRegistry</span>
+      <span class="contract-module">FuelBudget</span>
+      <span class="contract-module">TradeLimit</span>
+      <span class="contract-module">EmergencyBrake</span>
+    </div>
+  </div>
+  <div class="slide-number">08 / 16</div>
+</section>
+
+<!-- ============ SLIDE 9: HACKATHON FIT ============ -->
+<section class="slide" id="slide-9" style="background: var(--white);">
+  <div class="slide-content">
+    <div class="red-line reveal"></div>
+    <div class="section-title reveal"><span class="red">"A Toolkit for Civilization"</span></div>
+    <div class="fit-flow">
+      <div class="fit-step reveal reveal-delay-1">
+        <span class="fit-arrow">🏗️</span>
+        <span class="fit-text">文明需要基础设施</span>
+        <span class="fit-arrow">→</span>
+        <span class="fit-text"><strong>Smart Assembly</strong> 是基础设施</span>
+      </div>
+      <div class="fit-step reveal reveal-delay-2">
+        <span class="fit-arrow">⚙️</span>
+        <span class="fit-text">基础设施需要管理</span>
+        <span class="fit-arrow">→</span>
+        <span class="fit-text"><strong>NEXUS</strong> 提供 AI 自动化管理</span>
+      </div>
+      <div class="fit-step reveal reveal-delay-3">
+        <span class="fit-arrow">🚀</span>
+        <span class="fit-text">好的管理工具让文明更高效</span>
+        <span class="fit-arrow">→</span>
+        <span class="fit-text">从人工巡检到 <strong>AI 托管</strong></span>
+      </div>
+    </div>
+    <div class="section-subtitle reveal reveal-delay-4" style="font-weight:600; color: var(--gray-800);">目标奖项</div>
+    <div class="fit-awards">
+      <div class="award-card reveal reveal-delay-4">
+        <div class="emoji">🔧</div>
+        <div class="title">Utility Award ($5,000)</div>
+        <div class="desc">纯实用工具，解决真实痛点，不是概念 Demo</div>
+      </div>
+      <div class="award-card reveal reveal-delay-5">
+        <div class="emoji">🌐</div>
+        <div class="title">Live Integration ($5,000)</div>
+        <div class="desc">部署到 Stillness 测试网，真人可用</div>
+      </div>
+    </div>
+  </div>
+  <div class="slide-number">09 / 16</div>
+</section>
+
+<!-- ============ SLIDE 10: REUSE ============ -->
+<section class="slide" id="slide-10" style="background: var(--gray-50);">
+  <div class="slide-content">
+    <div class="red-line reveal"></div>
+    <div class="section-title reveal">不是从零开始 <span class="red">SuiJarvis</span></div>
+    <div class="section-subtitle reveal">SuiJarvis → NEXUS: 从 DeFi 资金管理 → Assembly 基地管理</div>
+    <div class="reuse-grid">
+      <div class="reuse-item reveal reveal-delay-1">
+        <div class="reuse-label">Telegram Bot 框架 <span>90%</span></div>
+        <div class="reuse-bar"><div class="reuse-fill" style="width:90%"></div></div>
+      </div>
+      <div class="reuse-item reveal reveal-delay-1">
+        <div class="reuse-label">AI 策略引擎 <span>80%</span></div>
+        <div class="reuse-bar"><div class="reuse-fill" style="width:80%"></div></div>
+      </div>
+      <div class="reuse-item reveal reveal-delay-2">
+        <div class="reuse-label">风控系统 <span>85%</span></div>
+        <div class="reuse-bar"><div class="reuse-fill" style="width:85%"></div></div>
+      </div>
+      <div class="reuse-item reveal reveal-delay-2">
+        <div class="reuse-label">Walrus 日志 <span>95%</span></div>
+        <div class="reuse-bar"><div class="reuse-fill" style="width:95%"></div></div>
+      </div>
+      <div class="reuse-item reveal reveal-delay-3">
+        <div class="reuse-label">Move 合约框架 <span>60%</span></div>
+        <div class="reuse-bar"><div class="reuse-fill" style="width:60%"></div></div>
+      </div>
+      <div class="reuse-item reveal reveal-delay-3">
+        <div class="reuse-label">前端 Landing Page <span>70%</span></div>
+        <div class="reuse-bar"><div class="reuse-fill" style="width:70%"></div></div>
+      </div>
+    </div>
+    <div class="reuse-bottom reveal reveal-delay-4">
+      <p>从零开始: <span style="color:var(--gray-400);">░░░░░░░░░░░░░░░░░░░░ 0%</span></p>
+      <p>NEXUS 起点: <span class="highlight">████████████░░░░░░░░ ~60%</span></p>
+    </div>
+  </div>
+  <div class="slide-number">10 / 16</div>
+</section>
+
+<!-- ============ SLIDE 11: ECOSYSTEM ============ -->
+<section class="slide" id="slide-11" style="background: var(--white);">
+  <div class="slide-content">
+    <div class="red-line reveal"></div>
+    <div class="section-title reveal">赋能其他黑客松项目 <span class="red">Ecosystem</span></div>
+    <div class="eco-grid">
+      <div class="eco-card reveal reveal-delay-1">
+        <div class="eco-icon">🎯</div>
+        <div><div class="name">Bounty Board</div><div class="help">AI 监控 Gate 事件，追踪通缉目标经过时推送猎人</div></div>
+      </div>
+      <div class="eco-card reveal reveal-delay-1">
+        <div class="eco-icon">⛽</div>
+        <div><div class="name">Star-Fuel Panic</div><div class="help">燃料管理 AI 对接调度系统，自动响应补给任务</div></div>
+      </div>
+      <div class="eco-card reveal reveal-delay-2">
+        <div class="eco-icon">🗺️</div>
+        <div><div class="name">Frontier Trade Routes</div><div class="help">Gate 流量监控数据输出，为路线优化提供实时情报</div></div>
+      </div>
+      <div class="eco-card reveal reveal-delay-2">
+        <div class="eco-icon">💹</div>
+        <div><div class="name">EVE Buff Market</div><div class="help">Storage 自动交易作为 Buff Market 的执行层</div></div>
+      </div>
+      <div class="eco-card reveal reveal-delay-3">
+        <div class="eco-icon">📖</div>
+        <div><div class="name">DemoSay / EVE 101</div><div class="help">Bot 内嵌新手引导，一键配置首个 Assembly</div></div>
+      </div>
+      <div class="eco-card reveal reveal-delay-3">
+        <div class="eco-icon">👁️</div>
+        <div><div class="name">eve eyes</div><div class="help">情报引擎数据共享，互为链上数据源</div></div>
+      </div>
+      <div class="eco-card reveal reveal-delay-4" style="grid-column: span 2;">
+        <div class="eco-icon">🧊</div>
+        <div><div class="name">BrineVault</div><div class="help">NEXUS 实时 Assembly 监控数据 feed 给情报站，增强信息密度</div></div>
+      </div>
+    </div>
+    <div class="eco-bottom reveal reveal-delay-5">"NEXUS 是 EVE Frontier 生态的 AI 基础设施层"</div>
+  </div>
+  <div class="slide-number">11 / 16</div>
+</section>
+
+<!-- ============ SLIDE 12: VIRAL ============ -->
+<section class="slide" id="slide-12" style="background: var(--gray-50);">
+  <div class="slide-content">
+    <div class="red-line reveal"></div>
+    <div class="section-title reveal">社区投票<span class="red">增长引擎</span></div>
+    <div class="section-subtitle reveal">5 个增长钩子形成正向飞轮</div>
+    <div class="viral-flow">
+      <div class="viral-step reveal reveal-delay-1">
+        <div class="emoji">📊</div>
+        <div class="title">分享卡片</div>
+        <div class="desc">自动生成 Assembly 周报，一键分享到 Twitter/Discord</div>
+      </div>
+      <div class="viral-step reveal reveal-delay-2">
+        <div class="emoji">🔗</div>
+        <div class="title">Referral</div>
+        <div class="desc">邀请新用户解锁高级功能，1% 收益返佣</div>
+      </div>
+      <div class="viral-step reveal reveal-delay-3">
+        <div class="emoji">🗳️</div>
+        <div class="title">Vote Campaign</div>
+        <div class="desc">Bot 内置投票引导 + 限定 NFT 徽章</div>
+      </div>
+      <div class="viral-step reveal reveal-delay-4">
+        <div class="emoji">🌐</div>
+        <div class="title">网络效应</div>
+        <div class="desc">NEXUS 用户间 Gate 互通免费/打折</div>
+      </div>
+      <div class="viral-step reveal reveal-delay-5">
+        <div class="emoji">🤖</div>
+        <div class="title">AI 社交</div>
+        <div class="desc">自动发推 + 自动回复 EVE 话题</div>
+      </div>
+    </div>
+  </div>
+  <div class="slide-number">12 / 16</div>
+</section>
+
+<!-- ============ SLIDE 13: PROGRESS ============ -->
+<section class="slide" id="slide-13" style="background: var(--white);">
+  <div class="slide-content">
+    <div class="red-line reveal"></div>
+    <div class="section-title reveal">已完成<span class="red">进度</span></div>
+    <div class="progress-cols">
+      <div class="reveal reveal-delay-1">
+        <h3>✅ 已完成</h3>
+        <ul class="progress-list">
+          <li><span class="check">✓</span> Sui Move 合约 (testnet 部署)</li>
+          <li><span class="check">✓</span> AI 策略引擎 (趋势跟踪 + 均值回归)</li>
+          <li><span class="check">✓</span> 风控系统 (限额 + 熔断 + 异常检测)</li>
+          <li><span class="check">✓</span> Telegram Bot (18 命令 + 持久键盘)</li>
+          <li><span class="check">✓</span> Walrus 去中心化日志</li>
+          <li><span class="check">✓</span> React Landing Page (Spline 3D)</li>
+          <li><span class="check">✓</span> 生态 API 接口骨架</li>
+          <li><span class="check">✓</span> 裂变增长模块</li>
+        </ul>
+      </div>
+      <div class="reveal reveal-delay-3">
+        <h3>🔄 本周进行中</h3>
+        <ul class="progress-list">
+          <li><span class="check">✓</span> 方案文档定稿</li>
+          <li><span class="check">✓</span> 架构改造设计</li>
+          <li><span class="check">✓</span> 基础 Demo 搭建</li>
+          <li><span class="check">✓</span> PPT 制作</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="slide-number">13 / 16</div>
+</section>
+
+<!-- ============ SLIDE 14: ROADMAP ============ -->
+<section class="slide" id="slide-14" style="background: var(--gray-50);">
+  <div class="slide-content">
+    <div class="red-line reveal"></div>
+    <div class="section-title reveal"><span class="red">10 天</span>冲刺计划</div>
+    <div class="roadmap-timeline reveal reveal-delay-1">
+      <div class="roadmap-item">
+        <div class="roadmap-dot"></div>
+        <div class="roadmap-day">D1-2</div>
+        <div class="roadmap-task">API 对接<br>Move 合约改造</div>
+      </div>
+      <div class="roadmap-item">
+        <div class="roadmap-dot"></div>
+        <div class="roadmap-day">D3-4</div>
+        <div class="roadmap-task">Bot 命令<br>Assembly 监控</div>
+      </div>
+      <div class="roadmap-item">
+        <div class="roadmap-dot"></div>
+        <div class="roadmap-day">D5-6</div>
+        <div class="roadmap-task">AI 策略<br>生态接口</div>
+      </div>
+      <div class="roadmap-item">
+        <div class="roadmap-dot"></div>
+        <div class="roadmap-day">D7</div>
+        <div class="roadmap-task">前端改造</div>
+      </div>
+      <div class="roadmap-item">
+        <div class="roadmap-dot"></div>
+        <div class="roadmap-day">D8</div>
+        <div class="roadmap-task">部署 Stillness<br>端到端测试</div>
+      </div>
+      <div class="roadmap-item">
+        <div class="roadmap-dot"></div>
+        <div class="roadmap-day">D9</div>
+        <div class="roadmap-task">Demo 视频<br>提交</div>
+      </div>
+    </div>
+    <div class="section-subtitle reveal reveal-delay-2" style="font-weight:600; color:var(--gray-800);">MVP 优先级</div>
+    <div class="mvp-grid">
+      <div class="mvp-card reveal reveal-delay-3">
+        <div class="priority p0">P0 必须</div>
+        <div class="items">Assembly 查询 + 燃料监控 + 合约部署</div>
+      </div>
+      <div class="mvp-card reveal reveal-delay-4">
+        <div class="priority p1">P1 尽量</div>
+        <div class="items">AI 自动补燃料 + 自动交易 + Walrus</div>
+      </div>
+      <div class="mvp-card reveal reveal-delay-5">
+        <div class="priority p2">P2 锦上添花</div>
+        <div class="items">Gate 动态定价 + 防御预警 + 3D 前端</div>
+      </div>
+    </div>
+  </div>
+  <div class="slide-number">14 / 16</div>
+</section>
+
+<!-- ============ SLIDE 15: HIGHLIGHTS ============ -->
+<section class="slide" id="slide-15" style="background: var(--white);">
+  <div class="slide-content">
+    <div class="red-line reveal"></div>
+    <div class="section-title reveal">为什么选 <span class="red">NEXUS</span></div>
+    <div class="highlights-grid">
+      <div class="highlight-card reveal reveal-delay-1">
+        <div class="emoji">🧠</div>
+        <div class="title">AI 自主决策</div>
+        <div class="desc">不是简单的监控工具，而是能自主分析和执行的 AI 管家。燃料预测、交易策略、防御响应，全部自动化。</div>
+      </div>
+      <div class="highlight-card reveal reveal-delay-2">
+        <div class="emoji">📜</div>
+        <div class="title">Move 合约安全</div>
+        <div class="desc">FuelBudget 限额 + TradeLimit 风控 + EmergencyBrake 熔断，AI 操作始终在安全边界内。</div>
+      </div>
+      <div class="highlight-card reveal reveal-delay-3">
+        <div class="emoji">📝</div>
+        <div class="title">完全可审计</div>
+        <div class="desc">每个 AI 决策的完整上下文存储在 Walrus 去中心化存储，不可篡改，支持事后审计。</div>
+      </div>
+      <div class="highlight-card reveal reveal-delay-4">
+        <div class="emoji">🤖</div>
+        <div class="title">1人 + AI 协作</div>
+        <div class="desc">80% AI 生成，100% 人工监督。10 天交付完整产品，开发效率的极致展示。</div>
+      </div>
+    </div>
+  </div>
+  <div class="slide-number">15 / 16</div>
+</section>
+
+<!-- ============ SLIDE 16: CTA ============ -->
+<section class="slide slide-cta" id="slide-16">
+  <div class="slide-content" style="align-items: center;">
+    <div class="cta-title reveal"><span style="color:var(--red-primary);">Ready</span> to Deploy</div>
+    <div class="cta-links reveal reveal-delay-1">
+      <a class="cta-link" href="#" target="_blank">
+        <span class="emoji">🤖</span>
+        <span class="label">Telegram Bot</span>
+      </a>
+      <a class="cta-link" href="https://github.com/wrx1234/sui-hackathon" target="_blank">
+        <span class="emoji">📂</span>
+        <span class="label">GitHub</span>
+      </a>
+      <a class="cta-link" href="#" target="_blank">
+        <span class="emoji">🌐</span>
+        <span class="label">Landing Page</span>
+      </a>
+    </div>
+    <div class="cta-tagline reveal reveal-delay-2">
+      你的 Assembly 不需要你盯着。<span class="red">NEXUS 替你看家。</span>
+    </div>
+    <div class="cta-vote reveal reveal-delay-3">欢迎试用 &amp; 投票！🗳️</div>
+  </div>
+  <div class="slide-number">16 / 16</div>
+</section>
+
+<script>
+(function() {
+  'use strict';
+
+  // ============ SLIDE NAVIGATION ============
+  const slides = document.querySelectorAll('.slide');
+  const totalSlides = slides.length;
+  let currentSlide = 0;
+  let isScrolling = false;
+
+  // Create nav dots
+  const navDots = document.getElementById('nav-dots');
+  slides.forEach((_, i) => {
+    const dot = document.createElement('button');
+    dot.className = 'nav-dot' + (i === 0 ? ' active' : '');
+    dot.setAttribute('aria-label', 'Go to slide ' + (i + 1));
+    dot.addEventListener('click', () => goToSlide(i));
+    navDots.appendChild(dot);
+  });
+
+  function updateProgress() {
+    const bar = document.getElementById('progress-bar');
+    bar.style.width = ((currentSlide + 1) / totalSlides * 100) + '%';
+    document.querySelectorAll('.nav-dot').forEach((d, i) => {
+      d.classList.toggle('active', i === currentSlide);
+    });
+  }
+
+  function goToSlide(index) {
+    if (index < 0 || index >= totalSlides || isScrolling) return;
+    isScrolling = true;
+    currentSlide = index;
+    slides[index].scrollIntoView({ behavior: 'smooth' });
+    updateProgress();
+    setTimeout(() => { isScrolling = false; }, 800);
+  }
+
+  // Keyboard
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowDown' || e.key === 'ArrowRight' || e.key === ' ') {
+      e.preventDefault();
+      goToSlide(currentSlide + 1);
+    } else if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') {
+      e.preventDefault();
+      goToSlide(currentSlide - 1);
+    } else if (e.key === 'Home') {
+      e.preventDefault();
+      goToSlide(0);
+    } else if (e.key === 'End') {
+      e.preventDefault();
+      goToSlide(totalSlides - 1);
+    }
+  });
+
+  // Mouse wheel
+  let wheelTimeout;
+  document.addEventListener('wheel', (e) => {
+    e.preventDefault();
+    clearTimeout(wheelTimeout);
+    wheelTimeout = setTimeout(() => {
+      if (e.deltaY > 0) goToSlide(currentSlide + 1);
+      else goToSlide(currentSlide - 1);
+    }, 80);
+  }, { passive: false });
+
+  // Touch
+  let touchStartY = 0;
+  document.addEventListener('touchstart', (e) => {
+    touchStartY = e.touches[0].clientY;
+  }, { passive: true });
+  document.addEventListener('touchend', (e) => {
+    const diff = touchStartY - e.changedTouches[0].clientY;
+    if (Math.abs(diff) > 50) {
+      goToSlide(currentSlide + (diff > 0 ? 1 : -1));
+    }
+  }, { passive: true });
+
+  // Scroll observer for current slide
+  const scrollObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        const index = Array.from(slides).indexOf(entry.target);
+        if (index !== -1) {
+          currentSlide = index;
+          updateProgress();
+        }
+      }
+    });
+  }, { threshold: 0.6 });
+  slides.forEach(s => scrollObserver.observe(s));
+
+  // ============ REVEAL ANIMATION ============
+  const revealObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('visible');
+      }
+    });
+  }, { threshold: 0.1, rootMargin: '0px 0px -50px 0px' });
+  document.querySelectorAll('.reveal').forEach(el => revealObserver.observe(el));
+
+  // Initial state
+  updateProgress();
+})();
+</script>
+</body>
+</html>
