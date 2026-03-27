@@ -1,0 +1,749 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NEXUS - EVE Frontier Demo</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #05050a;
+    color: #e0e8ff;
+    font-family: 'Segoe UI', 'SF Pro Display', system-ui, sans-serif;
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+    cursor: pointer;
+    user-select: none;
+  }
+
+  canvas#stars {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    z-index: 0;
+    pointer-events: none;
+  }
+
+  .slide {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 10;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.5s ease;
+    padding: 60px 80px;
+  }
+
+  .slide.active {
+    opacity: 1;
+    pointer-events: all;
+  }
+
+  /* Page counter */
+  #page-counter {
+    position: fixed;
+    bottom: 28px;
+    right: 36px;
+    z-index: 100;
+    font-size: 16px;
+    color: rgba(0,212,255,0.5);
+    letter-spacing: 2px;
+    font-weight: 300;
+  }
+
+  /* Speaker notes */
+  .speaker-note {
+    position: absolute;
+    bottom: 12px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 11px;
+    color: rgba(255,255,255,0.18);
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+    z-index: 20;
+  }
+
+  /* Typography */
+  .big-title {
+    font-size: clamp(48px, 7vw, 96px);
+    font-weight: 800;
+    background: linear-gradient(135deg, #00d4ff 0%, #8b5cf6 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    text-align: center;
+    line-height: 1.1;
+    margin-bottom: 24px;
+    text-shadow: none;
+  }
+
+  .subtitle {
+    font-size: clamp(20px, 2.8vw, 38px);
+    color: rgba(224,232,255,0.85);
+    text-align: center;
+    line-height: 1.5;
+    font-weight: 300;
+    max-width: 900px;
+    margin-bottom: 40px;
+  }
+
+  .small-text {
+    font-size: clamp(14px, 1.6vw, 22px);
+    color: rgba(224,232,255,0.5);
+    text-align: center;
+    font-weight: 300;
+    margin-top: 10px;
+  }
+
+  /* Bullet items */
+  .bullet-list {
+    list-style: none;
+    margin-top: 10px;
+    text-align: left;
+  }
+
+  .bullet-list li {
+    font-size: clamp(22px, 2.8vw, 38px);
+    color: #e0e8ff;
+    padding: 10px 0;
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 0.4s ease, transform 0.4s ease;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .bullet-list li.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  .bullet-list li .emoji {
+    font-size: 1.1em;
+    -webkit-text-fill-color: initial;
+  }
+
+  /* Accent line */
+  .accent-line {
+    width: 120px;
+    height: 3px;
+    background: linear-gradient(90deg, #00d4ff, #8b5cf6);
+    border-radius: 2px;
+    margin: 20px auto;
+  }
+
+  /* Slide 1 - Problem */
+  #slide-1 .warning-text {
+    font-size: clamp(16px, 2vw, 26px);
+    color: rgba(255, 80, 80, 0.75);
+    text-align: center;
+    margin-top: 20px;
+    max-width: 800px;
+    font-style: italic;
+  }
+
+  /* Slide 2 - Solution */
+  #slide-2 .feature-list li {
+    color: #b8f0ff;
+  }
+
+  /* Slide 3 - Transition */
+  #slide-3 .big-transition {
+    font-size: clamp(52px, 8vw, 108px);
+    font-weight: 900;
+    background: linear-gradient(135deg, #00d4ff, #8b5cf6);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    text-align: center;
+  }
+
+  #slide-3 .click-hint {
+    position: absolute;
+    bottom: 50px;
+    right: 60px;
+    font-size: 15px;
+    color: rgba(0,212,255,0.4);
+    border: 1px solid rgba(0,212,255,0.2);
+    padding: 8px 16px;
+    border-radius: 6px;
+  }
+
+  /* Slide 5 - Live demo */
+  #slide-5 .live-badge {
+    display: inline-block;
+    background: rgba(255,50,50,0.15);
+    border: 1px solid rgba(255,50,50,0.4);
+    color: #ff6b6b;
+    font-size: 14px;
+    padding: 4px 14px;
+    border-radius: 20px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-bottom: 20px;
+    animation: pulse-red 2s infinite;
+  }
+
+  @keyframes pulse-red {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(255,50,50,0.3); }
+    50% { box-shadow: 0 0 0 8px rgba(255,50,50,0); }
+  }
+
+  #slide-5 .bot-handle {
+    font-size: clamp(20px, 3vw, 42px);
+    color: #00d4ff;
+    font-weight: 600;
+    margin-top: 10px;
+  }
+
+  /* Slide 6 - Insurance */
+  #slide-6 .package-addr {
+    font-size: 14px;
+    color: rgba(0,212,255,0.5);
+    font-family: monospace;
+    margin-top: 30px;
+    border: 1px solid rgba(0,212,255,0.2);
+    padding: 8px 20px;
+    border-radius: 6px;
+    letter-spacing: 1px;
+  }
+
+  /* Slide 7 - What's Real */
+  .two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 40px;
+    width: 100%;
+    max-width: 1000px;
+    margin-top: 20px;
+  }
+
+  .col-card {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 16px;
+    padding: 28px 32px;
+  }
+
+  .col-card.real { border-color: rgba(0,255,120,0.25); }
+  .col-card.demo { border-color: rgba(255,160,0,0.25); }
+
+  .col-header {
+    font-size: clamp(16px, 1.8vw, 22px);
+    font-weight: 700;
+    margin-bottom: 16px;
+  }
+
+  .col-header.real { color: #00ff88; }
+  .col-header.demo { color: #ffaa00; }
+
+  .col-card ul {
+    list-style: none;
+  }
+
+  .col-card ul li {
+    font-size: clamp(13px, 1.4vw, 18px);
+    color: rgba(224,232,255,0.7);
+    padding: 5px 0;
+    opacity: 0;
+    transform: translateX(-10px);
+    transition: opacity 0.35s ease, transform 0.35s ease;
+  }
+
+  .col-card ul li.visible {
+    opacity: 1;
+    transform: translateX(0);
+  }
+
+  .bottom-note {
+    font-size: 13px;
+    color: rgba(224,232,255,0.3);
+    text-align: center;
+    margin-top: 24px;
+    font-style: italic;
+  }
+
+  /* Slide 8 - Architecture */
+  .arch-diagram {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0;
+    margin-top: 20px;
+    width: 100%;
+    max-width: 900px;
+  }
+
+  .arch-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+    width: 100%;
+    margin: 8px 0;
+    opacity: 0;
+    transform: translateY(15px);
+    transition: opacity 0.4s ease, transform 0.4s ease;
+  }
+
+  .arch-row.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  .arch-box {
+    background: rgba(0,212,255,0.07);
+    border: 1px solid rgba(0,212,255,0.3);
+    border-radius: 10px;
+    padding: 12px 28px;
+    font-size: clamp(14px, 1.5vw, 19px);
+    color: #b8f0ff;
+    text-align: center;
+    white-space: nowrap;
+  }
+
+  .arch-box.purple {
+    background: rgba(139,92,246,0.1);
+    border-color: rgba(139,92,246,0.35);
+    color: #d4b8ff;
+  }
+
+  .arch-box.green {
+    background: rgba(0,255,120,0.06);
+    border-color: rgba(0,255,120,0.25);
+    color: #a0ffd0;
+    font-size: clamp(12px, 1.3vw, 16px);
+  }
+
+  .arch-arrow {
+    font-size: 22px;
+    color: rgba(0,212,255,0.5);
+  }
+
+  .arch-down {
+    font-size: 28px;
+    color: rgba(139,92,246,0.5);
+    margin: 2px 0;
+    opacity: 0;
+    transition: opacity 0.4s ease;
+  }
+
+  .arch-down.visible { opacity: 1; }
+
+  /* Slide 9 - Closing */
+  .stats-row {
+    display: flex;
+    gap: 60px;
+    margin: 30px 0;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .stat-item {
+    text-align: center;
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 0.4s ease, transform 0.4s ease;
+  }
+
+  .stat-item.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  .stat-number {
+    font-size: clamp(32px, 4vw, 56px);
+    font-weight: 800;
+    background: linear-gradient(135deg, #00d4ff, #8b5cf6);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .stat-label {
+    font-size: clamp(12px, 1.2vw, 16px);
+    color: rgba(224,232,255,0.5);
+    margin-top: 6px;
+  }
+
+  .links-row {
+    display: flex;
+    gap: 40px;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin-top: 10px;
+    opacity: 0;
+    transition: opacity 0.4s ease;
+  }
+
+  .links-row.visible { opacity: 1; }
+
+  .link-item {
+    font-size: clamp(13px, 1.4vw, 18px);
+    color: rgba(0,212,255,0.7);
+    font-family: monospace;
+  }
+
+  .thank-you-btn {
+    margin-top: 32px;
+    padding: 18px 60px;
+    font-size: clamp(22px, 2.5vw, 34px);
+    font-weight: 700;
+    background: linear-gradient(135deg, #00d4ff, #8b5cf6);
+    border: none;
+    border-radius: 60px;
+    color: #fff;
+    cursor: default;
+    opacity: 0;
+    transform: scale(0.9);
+    transition: opacity 0.5s ease, transform 0.5s ease;
+    box-shadow: 0 0 40px rgba(0,212,255,0.3), 0 0 80px rgba(139,92,246,0.2);
+    animation: glow-btn 3s infinite;
+  }
+
+  .thank-you-btn.visible {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  @keyframes glow-btn {
+    0%, 100% { box-shadow: 0 0 40px rgba(0,212,255,0.3), 0 0 80px rgba(139,92,246,0.2); }
+    50% { box-shadow: 0 0 60px rgba(0,212,255,0.5), 0 0 100px rgba(139,92,246,0.35); }
+  }
+
+  /* Grid overlay (subtle) */
+  body::before {
+    content: '';
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background-image:
+      linear-gradient(rgba(0,212,255,0.025) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,212,255,0.025) 1px, transparent 1px);
+    background-size: 80px 80px;
+    z-index: 1;
+    pointer-events: none;
+  }
+</style>
+</head>
+<body>
+
+<canvas id="stars"></canvas>
+
+<!-- Page Counter -->
+<div id="page-counter">1 / 9</div>
+
+<!-- SLIDE 1 - Problem -->
+<div class="slide active" id="slide-1">
+  <div class="big-title">In EVE Frontier...</div>
+  <div class="accent-line"></div>
+  <div class="subtitle">
+    Your Smart Assembly can be destroyed anytime.<br>
+    No warning. No insurance. No recovery.
+  </div>
+  <div class="warning-text">
+    你睡着了，你的 Gate 断电了。你的资产被打爆了。没有任何保障。
+  </div>
+  <div class="speaker-note">强调痛点 — 这是每个 EVE 玩家都经历过的噩梦场景</div>
+</div>
+
+<!-- SLIDE 2 - Solution -->
+<div class="slide" id="slide-2">
+  <div class="big-title">Introducing NEXUS</div>
+  <div class="accent-line"></div>
+  <div class="subtitle">Built entirely in this hackathon. Bot + Move contracts + Website + EVE EYES integration.</div>
+  <ul class="bullet-list feature-list">
+    <li><span class="emoji">⚡</span> 24/7 AI Monitoring</li>
+    <li><span class="emoji">🤖</span> Telegram Bot Interface</li>
+    <li><span class="emoji">🛡️</span> On-Chain Insurance Protocol</li>
+  </ul>
+  <div class="speaker-note">三个核心价值主张 — 监控、操作、保险</div>
+</div>
+
+<!-- SLIDE 3 - Transition to website -->
+<div class="slide" id="slide-3">
+  <div class="big-transition">Let's see the product.</div>
+  <div class="accent-line"></div>
+  <div class="small-text">官网展示...</div>
+  <div class="click-hint">[点击继续]</div>
+  <div class="speaker-note">切换到官网录屏 — 展示主页、功能介绍、保险界面</div>
+</div>
+
+<!-- SLIDE 4 - Bot features -->
+<div class="slide" id="slide-4">
+  <div class="big-title" style="font-size: clamp(36px, 5vw, 72px);">NEXUS Bot — Built This Hackathon</div>
+  <div class="accent-line"></div>
+  <ul class="bullet-list">
+    <li><span class="emoji">📊</span> Assembly Status Monitor</li>
+    <li><span class="emoji">⛽</span> Fuel Manager</li>
+    <li><span class="emoji">🚪</span> Gate Controller</li>
+    <li><span class="emoji">🔔</span> Smart Alerts</li>
+    <li><span class="emoji">🛡️</span> Insurance</li>
+    <li><span class="emoji">🐋</span> Whale Tracker <span style="color:#8b5cf6; font-size:0.7em; margin-left:8px;">(Real On-Chain)</span></li>
+  </ul>
+  <div class="speaker-note">展示每个功能时配合 Bot 截图 — 保险和鲸鱼追踪是亮点</div>
+</div>
+
+<!-- SLIDE 5 - Live demo transition -->
+<div class="slide" id="slide-5">
+  <div class="live-badge">● LIVE</div>
+  <div class="big-transition" style="font-size: clamp(64px, 10vw, 130px);">Live Demo</div>
+  <div class="accent-line"></div>
+  <div class="bot-handle">@EVENexusBot on Telegram</div>
+  <div class="small-text" style="margin-top: 20px;">Bot 实操演示...</div>
+  <div class="speaker-note">切换到 Telegram — 演示 /status /fuel /insurance buy 命令</div>
+</div>
+
+<!-- SLIDE 6 - Insurance highlight -->
+<div class="slide" id="slide-6">
+  <div class="big-title" style="font-size: clamp(40px, 5.5vw, 80px);">NEXUS Insurance</div>
+  <div class="accent-line"></div>
+  <div class="subtitle" style="font-size: clamp(16px, 2vw, 28px);">
+    EVE Frontier's First Decentralized Insurance Protocol
+  </div>
+  <ul class="bullet-list">
+    <li><span class="emoji">🔗</span> Move Smart Contract on Sui Testnet</li>
+    <li><span class="emoji">⚡</span> Auto-payout on Assembly Destruction</li>
+    <li><span class="emoji">📊</span> AI Dynamic Pricing</li>
+  </ul>
+  <div class="package-addr">Package: 0x4ef033c6...</div>
+  <div class="speaker-note">重点: 链上合约已部署 — 不是 mock，是真实的 Move 合约</div>
+</div>
+
+<!-- SLIDE 7 - What's Real -->
+<div class="slide" id="slide-7">
+  <div class="big-title" style="font-size: clamp(36px, 4.5vw, 64px);">What's Real Right Now</div>
+  <div class="accent-line"></div>
+  <div class="two-col">
+    <div class="col-card real">
+      <div class="col-header real">✅ REAL DATA</div>
+      <ul>
+        <li>Sui Wallet Balance</li>
+        <li>EVE Network Activity (EVE EYES)</li>
+        <li>Whale Tracker</li>
+        <li>Move Contract (Testnet)</li>
+      </ul>
+    </div>
+    <div class="col-card demo">
+      <div class="col-header demo">🔶 DEMO DATA</div>
+      <ul>
+        <li>Assembly Status (%)</li>
+        <li>Fuel Levels</li>
+        <li>Gate Names</li>
+      </ul>
+    </div>
+  </div>
+  <div class="bottom-note">Demo data will be replaced once EVE Frontier opens API access</div>
+  <div class="speaker-note">诚实说明哪些是真实数据 — 增强可信度</div>
+</div>
+
+<!-- SLIDE 8 - Architecture -->
+<div class="slide" id="slide-8">
+  <div class="big-title" style="font-size: clamp(36px, 4.5vw, 64px);">Architecture</div>
+  <div class="accent-line"></div>
+  <div class="arch-diagram">
+    <div class="arch-row" id="arch-1">
+      <div class="arch-box">👤 User: Telegram</div>
+      <div class="arch-arrow">→</div>
+      <div class="arch-box purple">🤖 NEXUS Bot: Python AI</div>
+    </div>
+    <div class="arch-down" id="arch-arrow-1">↓</div>
+    <div class="arch-row" id="arch-2">
+      <div class="arch-box">📡 EVE EYES API</div>
+      <div class="arch-arrow">+</div>
+      <div class="arch-box">⛓️ Sui RPC</div>
+    </div>
+    <div class="arch-down" id="arch-arrow-2">↓</div>
+    <div class="arch-row" id="arch-3">
+      <div class="arch-box green">Move Contracts on Sui<br><span style="opacity:0.6; font-size:0.85em;">insurance | gate_commander | config</span></div>
+    </div>
+  </div>
+  <div class="speaker-note">三层架构: 用户界面 → AI 处理层 → 链上合约</div>
+</div>
+
+<!-- SLIDE 9 - Closing -->
+<div class="slide" id="slide-9">
+  <div class="big-title">NEXUS</div>
+  <div class="accent-line"></div>
+  <div class="subtitle" style="font-size: clamp(16px, 1.8vw, 26px); margin-bottom: 20px;">
+    Building Civilization Infrastructure for EVE Frontier
+  </div>
+  <div class="stats-row">
+    <div class="stat-item" id="stat-1">
+      <div class="stat-number">15,000+</div>
+      <div class="stat-label">indexed transactions</div>
+    </div>
+    <div class="stat-item" id="stat-2">
+      <div class="stat-number">295,000+</div>
+      <div class="stat-label">Move calls tracked</div>
+    </div>
+    <div class="stat-item" id="stat-3">
+      <div class="stat-number">1</div>
+      <div class="stat-label">deployed insurance contract</div>
+    </div>
+  </div>
+  <div class="links-row" id="links-row">
+    <div class="link-item">GitHub: github.com/wrx1234/nexus-eve-frontier</div>
+    <div class="link-item">Bot: t.me/EVENexusBot</div>
+  </div>
+  <button class="thank-you-btn" id="thank-you-btn">Thank you 🚀</button>
+  <div class="speaker-note">感谢评委 — 欢迎提问</div>
+</div>
+
+<script>
+// ===== Stars / Particles =====
+const canvas = document.getElementById('stars');
+const ctx = canvas.getContext('2d');
+let W, H, particles = [];
+
+function resize() {
+  W = canvas.width = window.innerWidth;
+  H = canvas.height = window.innerHeight;
+}
+
+function initParticles() {
+  particles = [];
+  const count = Math.floor((W * H) / 4000);
+  for (let i = 0; i < count; i++) {
+    particles.push({
+      x: Math.random() * W,
+      y: Math.random() * H,
+      r: Math.random() * 1.5 + 0.3,
+      vx: (Math.random() - 0.5) * 0.15,
+      vy: (Math.random() - 0.5) * 0.15,
+      alpha: Math.random() * 0.7 + 0.2,
+      color: Math.random() > 0.85 ? '#8b5cf6' : Math.random() > 0.7 ? '#00d4ff' : '#ffffff'
+    });
+  }
+}
+
+function drawStars() {
+  ctx.clearRect(0, 0, W, H);
+  particles.forEach(p => {
+    ctx.save();
+    ctx.globalAlpha = p.alpha;
+    ctx.fillStyle = p.color;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+    p.x += p.vx;
+    p.y += p.vy;
+    if (p.x < 0) p.x = W;
+    if (p.x > W) p.x = 0;
+    if (p.y < 0) p.y = H;
+    if (p.y > H) p.y = 0;
+  });
+  requestAnimationFrame(drawStars);
+}
+
+window.addEventListener('resize', () => { resize(); initParticles(); });
+resize();
+initParticles();
+drawStars();
+
+// ===== Slide Engine =====
+const slides = document.querySelectorAll('.slide');
+const counter = document.getElementById('page-counter');
+let current = 0;
+const total = slides.length;
+
+function showSlide(index) {
+  slides[current].classList.remove('active');
+  current = (index + total) % total;
+  slides[current].classList.add('active');
+  counter.textContent = (current + 1) + ' / ' + total;
+  triggerAnimations(current);
+}
+
+function nextSlide() { showSlide(current + 1); }
+function prevSlide() { showSlide(current - 1); }
+
+// ===== Per-Slide Animations =====
+function triggerAnimations(idx) {
+  const slide = slides[idx];
+
+  // Animate bullet list items
+  const bullets = slide.querySelectorAll('.bullet-list li');
+  bullets.forEach((li, i) => {
+    li.classList.remove('visible');
+    setTimeout(() => li.classList.add('visible'), 300 + i * 350);
+  });
+
+  // Slide 7 - two-col items
+  const colItems = slide.querySelectorAll('.col-card ul li');
+  colItems.forEach((li, i) => {
+    li.classList.remove('visible');
+    setTimeout(() => li.classList.add('visible'), 400 + i * 250);
+  });
+
+  // Slide 8 - architecture rows
+  if (idx === 7) {
+    const rows = ['arch-1', 'arch-arrow-1', 'arch-2', 'arch-arrow-2', 'arch-3'];
+    rows.forEach((id, i) => {
+      const el = document.getElementById(id);
+      if (el) {
+        el.classList.remove('visible');
+        setTimeout(() => el.classList.add('visible'), 300 + i * 350);
+      }
+    });
+  }
+
+  // Slide 9 - stats
+  if (idx === 8) {
+    ['stat-1','stat-2','stat-3'].forEach((id, i) => {
+      const el = document.getElementById(id);
+      if (el) {
+        el.classList.remove('visible');
+        setTimeout(() => el.classList.add('visible'), 400 + i * 300);
+      }
+    });
+    const links = document.getElementById('links-row');
+    if (links) {
+      links.classList.remove('visible');
+      setTimeout(() => links.classList.add('visible'), 1400);
+    }
+    const btn = document.getElementById('thank-you-btn');
+    if (btn) {
+      btn.classList.remove('visible');
+      setTimeout(() => btn.classList.add('visible'), 1800);
+    }
+  }
+}
+
+// Trigger animations for slide 1 on load
+setTimeout(() => triggerAnimations(0), 100);
+
+// ===== Input Handlers =====
+document.addEventListener('click', nextSlide);
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') {
+    e.preventDefault();
+    nextSlide();
+  } else if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
+    e.preventDefault();
+    prevSlide();
+  }
+});
+
+// Touch swipe
+let touchStartX = 0;
+document.addEventListener('touchstart', e => { touchStartX = e.touches[0].clientX; });
+document.addEventListener('touchend', e => {
+  const dx = e.changedTouches[0].clientX - touchStartX;
+  if (dx < -50) nextSlide();
+  else if (dx > 50) prevSlide();
+});
+</script>
+</body>
+</html>

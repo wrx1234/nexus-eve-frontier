@@ -55,10 +55,10 @@ function App() {
   ]
 
   const ecosystemStats = [
-    { value: '∞', label: t('Assemblies Supported', '支持的组装体') },
-    { value: '24/7', label: t('Monitoring Uptime', '监控运行时间') },
-    { value: '$0', label: t('Setup Cost', '设置成本') },
-    { value: '<3s', label: t('Response Time', '响应时间') },
+    { value: '15,000+', label: t('Indexed Transactions', '已索引交易') },
+    { value: '295,000+', label: t('Move Calls Tracked', 'Move 调用追踪') },
+    { value: '1', label: t('Deployed Insurance Contract', '已部署保险合约') },
+    { value: '6', label: t('Bot Modules', 'Bot 模块') },
   ]
 
   const archCards = [
@@ -165,8 +165,8 @@ function App() {
             </motion.p>
             <motion.p initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
               className="mt-4 text-neutral-400 max-w-lg">
-              {t('AI-powered Smart Assembly management for EVE Frontier. Monitor fuel, automate trades, defend your base - 24/7.',
-                'AI 驱动的 EVE Frontier 智能组装体管理。监控燃料、自动交易、防御基地 - 全天候运行。')}
+              {t('AI-powered Smart Assembly management for EVE Frontier. Monitor fuel, automate trades, defend your base - with real on-chain data via EVE EYES integration. 24/7.',
+                'AI 驱动的 EVE Frontier 智能组装体管理。监控燃料、自动交易、防御基地 - 通过 EVE EYES 集成获取真实链上数据。全天候运行。')}
             </motion.p>
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}
               className="mt-8 flex gap-4">
