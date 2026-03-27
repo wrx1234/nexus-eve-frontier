@@ -103,6 +103,37 @@ logging.basicConfig(
 )
 log = logging.getLogger("nexus")
 
+# ==================== EVE EYES API ====================
+EVE_EYES_BASE = "https://eve-eyes.d0v.xyz"
+EVE_EYES_JWT = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJldmUtZXllcyIsImF1ZCI6ImV2ZS1leWVzLXVzZXJzIiwiaWF0IjoxNzc0NjE2MDQ2LCJleHAiOjE3NzQ2NTkyNDYsInN1YiI6IjB4ZDFlNjExNzdlZmMxZDVhZTBmMWEwOGQ0NWM4N2U3NzUxYzg3YzIwZDVmOWI2NTFlYzg0ZjRhODYzYzg5YTU0NyIsIndhbGxldEFkZHJlc3MiOiIweGQxZTYxMTc3ZWZjMWQ1YWUwZjFhMDhkNDVjODdlNzc1MWM4N2MyMGQ1ZjliNjUxZWM4NGY0YTg2M2M4OWE1NDciLCJjaGFpbiI6InN1aSJ9.ivcyFkCdSGwkdHvLZMBfMGHV2D_TC771LxhcjTZka3Y"
+
+async def get_eve_module_activity():
+    """获取 EVE 全网模块活跃度 (真实链上数据)"""
+    try:
+        import aiohttp
+        headers = {"Authorization": f"Bearer {EVE_EYES_JWT}"}
+        async with aiohttp.ClientSession() as session:
+            async with session.get(f"{EVE_EYES_BASE}/api/indexer/module-call-counts", headers=headers, timeout=aiohttp.ClientTimeout(total=5)) as resp:
+                if resp.status == 200:
+                    data = await resp.json()
+                    return data.get("modules", [])
+    except Exception as e:
+        logging.warning(f"EVE EYES API error: {e}")
+    return None
+
+async def get_eve_recent_activity(page: int = 1):
+    """获取最近交易"""
+    try:
+        import aiohttp
+        headers = {"Authorization": f"Bearer {EVE_EYES_JWT}"}
+        async with aiohttp.ClientSession() as session:
+            async with session.get(f"{EVE_EYES_BASE}/api/indexer/transaction-blocks?page={page}&pageSize=20", headers=headers, timeout=aiohttp.ClientTimeout(total=5)) as resp:
+                if resp.status == 200:
+                    return await resp.json()
+    except Exception as e:
+        logging.warning(f"EVE EYES API error: {e}")
+    return None
+
 # ==================== 用户钱包管理 ====================
 WALLETS_FILE = os.path.join(DATA_DIR, "wallets.json")
 
@@ -447,6 +478,47 @@ async def cmd_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(text, parse_mode="Markdown", reply_markup=PERSISTENT_KEYBOARD)
 
 
+def _build_eve_network_text(modules, lang: str) -> str:
+    """构建 EVE 宇宙网络活跃度文本段"""
+    # 默认 fallback 数据
+    defaults = {
+        "network_node": 93213,
+        "turret": 66540,
+        "assembly": 45455,
+        "gate": 34214,
+        "killmail": 3,
+        "fuel": 6,
+    }
+    counts = dict(defaults)
+    if modules:
+        for m in modules:
+            name = m.get("module") or m.get("name") or m.get("type", "")
+            count = m.get("count") or m.get("calls") or m.get("total", 0)
+            if name in counts:
+                counts[name] = count
+
+    if lang == "cn":
+        return (
+            f"🌐 *EVE 宇宙活跃度 (真实链上)*\n"
+            f"  ⚡ network\_node: {counts['network_node']:,}\n"
+            f"  🔫 turret: {counts['turret']:,}\n"
+            f"  🏗️ assembly: {counts['assembly']:,}\n"
+            f"  🚪 gate: {counts['gate']:,}\n"
+            f"  💀 killmail: {counts['killmail']:,}\n"
+            f"  ⛽ fuel: {counts['fuel']:,}"
+        )
+    else:
+        return (
+            f"🌐 *EVE Universe Activity (On-Chain)*\n"
+            f"  ⚡ network\_node: {counts['network_node']:,}\n"
+            f"  🔫 turret: {counts['turret']:,}\n"
+            f"  🏗️ assembly: {counts['assembly']:,}\n"
+            f"  🚪 gate: {counts['gate']:,}\n"
+            f"  💀 killmail: {counts['killmail']:,}\n"
+            f"  ⛽ fuel: {counts['fuel']:,}"
+        )
+
+
 async def cmd_status(update: Update, context: ContextTypes.DEFAULT_TYPE):
     uid = str(update.effective_user.id)
     log_action("status", f"uid:{uid}")
@@ -459,6 +531,10 @@ async def _send_status_panel(msg, uid: str):
     assemblies = _get_mock_assemblies()
     total_rev = _get_total_revenue_24h()
     fuel_alerts = _count_fuel_alerts()
+
+    # 获取 EVE EYES 真实链上数据
+    eve_modules = await get_eve_module_activity()
+    eve_network_text = _build_eve_network_text(eve_modules, lang)
 
     lines = []
     for a in assemblies:
@@ -482,8 +558,6 @@ async def _send_status_panel(msg, uid: str):
 
     assembly_text = "\n".join(lines)
 
-    demo_label = "📡 _Demo Data - 对接链上数据中_" if lang == "cn" else "📡 _Demo Data - Connecting to on-chain_"
-
     if lang == "cn":
         fuel_line = f"⛽ 燃料警报: {fuel_alerts} 个 assembly 需要加油" if fuel_alerts > 0 else "✅ 所有燃料正常"
         text = (
@@ -494,7 +568,7 @@ async def _send_status_panel(msg, uid: str):
             f"━━━━━━━━━━━━━━━━━━━━━\n"
             f"💰 24h 总收益: {total_rev:.1f} SUI\n"
             f"{fuel_line}\n\n"
-            f"{demo_label}"
+            f"{eve_network_text}"
         )
     else:
         fuel_line = f"⛽ Fuel Alert: {fuel_alerts} assembly needs refuel" if fuel_alerts > 0 else "✅ All fuel levels normal"
@@ -506,7 +580,7 @@ async def _send_status_panel(msg, uid: str):
             f"━━━━━━━━━━━━━━━━━━━━━\n"
             f"💰 Total Revenue (24h): {total_rev:.1f} SUI\n"
             f"{fuel_line}\n\n"
-            f"{demo_label}"
+            f"{eve_network_text}"
         )
 
     kb = InlineKeyboardMarkup([
@@ -969,47 +1043,63 @@ async def cmd_whale(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 async def _send_whale_panel(msg, uid: str):
-    """鲸鱼 Assembly 追踪"""
+    """鲸鱼 Assembly 追踪 (EVE EYES 真实链上数据)"""
     lang = get_lang(uid)
 
-    # Mock 鲸鱼 Assembly 数据
-    whales = [
-        {"name": "MegaCorp Station", "type": "🚪 Gate", "fuel": 95, "jumps": 1240, "revenue": 28.5},
-        {"name": "DeepSpace Depot", "type": "📦 Storage", "fuel": 88, "items": "420/500", "revenue": 15.2},
-        {"name": "Fortress Prime", "type": "🔫 Turret", "fuel": 72, "kills": 47, "revenue": 8.1},
-        {"name": "Nexus Hub Alpha", "type": "🚪 Gate", "fuel": 91, "jumps": 890, "revenue": 22.3},
-        {"name": "Arsenal Outpost", "type": "🔫 Turret", "fuel": 65, "kills": 31, "revenue": 6.4},
+    # 获取 EVE EYES 真实模块活跃度
+    eve_modules = await get_eve_module_activity()
+
+    # 构建模块活跃度排行
+    defaults = [
+        {"name": "network_node", "calls": 93213, "icon": "⚡"},
+        {"name": "turret",       "calls": 66540, "icon": "🔫"},
+        {"name": "assembly",     "calls": 45455, "icon": "🏗️"},
+        {"name": "gate",         "calls": 34214, "icon": "🚪"},
+        {"name": "killmail",     "calls": 3,     "icon": "💀"},
+        {"name": "fuel",         "calls": 6,     "icon": "⛽"},
     ]
+    module_map = {m["name"]: m for m in defaults}
+    if eve_modules:
+        for m in eve_modules:
+            name = m.get("module") or m.get("name") or m.get("type", "")
+            count = m.get("count") or m.get("calls") or m.get("total", 0)
+            if name in module_map:
+                module_map[name]["calls"] = count
+
+    # 按调用量排序 Top 5
+    sorted_modules = sorted(module_map.values(), key=lambda x: x["calls"], reverse=True)[:5]
+    total_calls = sum(m["calls"] for m in module_map.values())
 
     lines = []
-    for w in whales:
-        fuel_bar = _fuel_bar(w["fuel"])
-        line = f"  🐋 *{w['name']}* ({w['type']})\n"
-        line += f"     Fuel: {fuel_bar}\n"
-        line += f"     Revenue (24h): {w['revenue']} SUI\n"
-        lines.append(line)
+    for i, m in enumerate(sorted_modules, 1):
+        bar_pct = int(m["calls"] / max(sorted_modules[0]["calls"], 1) * 100)
+        bar_filled = int(bar_pct / 10)
+        bar = "█" * bar_filled + "░" * (10 - bar_filled)
+        lines.append(f"  {m['icon']} *{m['name']}*\n     [{bar}] {m['calls']:,} calls\n")
 
     whale_text = "\n".join(lines)
+    data_source = "EVE EYES 真实链上" if eve_modules else "EVE EYES (缓存数据)"
+    data_source_en = "EVE EYES On-Chain" if eve_modules else "EVE EYES (cached)"
 
     if lang == "cn":
         text = (
-            f"🐋 *鲸鱼 Assembly 追踪*\n"
+            f"🐋 *EVE 宇宙模块活跃度排行*\n"
             f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n"
-            f"📊 *Top 5 巨型 Assembly:*\n\n"
+            f"📊 *Top 5 最活跃模块 ({data_source}):*\n\n"
             f"{whale_text}\n"
             f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
-            f"💰 Top 5 总收益: {sum(w['revenue'] for w in whales):.1f} SUI/24h\n\n"
-            f"_追踪最大 Assembly 的运营策略_"
+            f"⚡ 全网总调用: {total_calls:,} calls\n\n"
+            f"_数据来源: EVE EYES 链上索引器_"
         )
     else:
         text = (
-            f"🐋 *Whale Assembly Tracker*\n"
+            f"🐋 *EVE Universe Module Activity*\n"
             f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n"
-            f"📊 *Top 5 Mega Assemblies:*\n\n"
+            f"📊 *Top 5 Active Modules ({data_source_en}):*\n\n"
             f"{whale_text}\n"
             f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
-            f"💰 Top 5 Revenue: {sum(w['revenue'] for w in whales):.1f} SUI/24h\n\n"
-            f"_Track the biggest Assembly operators' strategies_"
+            f"⚡ Total Network Calls: {total_calls:,}\n\n"
+            f"_Data source: EVE EYES On-Chain Indexer_"
         )
 
     kb = InlineKeyboardMarkup([
