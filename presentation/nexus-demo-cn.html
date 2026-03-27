@@ -1,0 +1,921 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NEXUS - EVE Frontier AI Assembly 管理平台</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --red: #ff2d2d;
+    --orange: #ff6b1a;
+    --bg: #0a0a0a;
+    --card-bg: rgba(255,45,45,0.05);
+    --card-border: rgba(255,45,45,0.2);
+    --highlight-border: rgba(255,107,26,0.4);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #0a0a0a;
+    background: linear-gradient(135deg, #0a0a0a 0%, #1a0505 50%, #0a0a0a 100%);
+    color: #ffffff;
+    font-family: 'Space Grotesk', sans-serif;
+    overflow: hidden;
+    height: 100vh;
+    width: 100vw;
+  }
+
+  /* Canvas backgrounds */
+  #starfield, #embers {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    pointer-events: none;
+    z-index: 0;
+  }
+  #embers { z-index: 1; }
+
+  /* Progress bar */
+  #progress-bar {
+    position: fixed;
+    top: 0; left: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--red), var(--orange));
+    transition: width 0.4s ease;
+    z-index: 100;
+    box-shadow: 0 0 10px var(--red);
+  }
+
+  /* Nav dots */
+  #nav-dots {
+    position: fixed;
+    right: 24px;
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    z-index: 100;
+  }
+  .nav-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.2);
+    cursor: pointer;
+    transition: all 0.3s;
+    border: 1px solid rgba(255,45,45,0.3);
+  }
+  .nav-dot.active {
+    background: var(--red);
+    box-shadow: 0 0 8px var(--red);
+    transform: scale(1.3);
+  }
+
+  /* Page counter */
+  #page-counter {
+    position: fixed;
+    bottom: 20px;
+    right: 50px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    color: rgba(255,255,255,0.3);
+    z-index: 100;
+  }
+
+  /* Slides container */
+  #slides {
+    position: relative;
+    z-index: 10;
+    width: 100%;
+    height: 100vh;
+  }
+
+  .slide {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 80px 80px;
+    opacity: 0;
+    transform: translateY(30px);
+    transition: opacity 0.6s ease, transform 0.6s ease;
+    pointer-events: none;
+  }
+  .slide.active {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: all;
+  }
+  .slide.prev {
+    opacity: 0;
+    transform: translateY(-30px);
+  }
+
+  /* Speaker notes */
+  .speaker-note {
+    position: absolute;
+    bottom: 18px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: rgba(255,255,255,0.25);
+    white-space: nowrap;
+    letter-spacing: 0.5px;
+  }
+
+  /* Typography */
+  .mono-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    color: var(--orange);
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-bottom: 20px;
+  }
+
+  .cover-title {
+    font-size: clamp(56px, 8vw, 96px);
+    font-weight: 700;
+    color: var(--red);
+    text-shadow: 0 0 40px rgba(255,45,45,0.6), 0 0 80px rgba(255,45,45,0.3);
+    line-height: 1.1;
+    text-align: center;
+    margin-bottom: 24px;
+  }
+
+  .cover-glow {
+    position: absolute;
+    width: 600px; height: 600px;
+    background: radial-gradient(circle, rgba(255,45,45,0.08) 0%, transparent 70%);
+    border-radius: 50%;
+    animation: pulse-glow 4s ease-in-out infinite;
+    pointer-events: none;
+  }
+
+  @keyframes pulse-glow {
+    0%, 100% { transform: scale(1); opacity: 0.6; }
+    50% { transform: scale(1.15); opacity: 1; }
+  }
+
+  .subtitle {
+    font-size: 20px;
+    color: rgba(255,255,255,0.7);
+    text-align: center;
+    line-height: 1.8;
+    margin-bottom: 16px;
+  }
+
+  .subtitle strong {
+    color: #fff;
+  }
+
+  h1.slide-title {
+    font-size: clamp(32px, 4vw, 52px);
+    font-weight: 700;
+    color: #fff;
+    text-align: center;
+    margin-bottom: 12px;
+  }
+
+  h2.slide-subtitle {
+    font-size: 18px;
+    color: rgba(255,255,255,0.5);
+    text-align: center;
+    margin-bottom: 36px;
+    font-weight: 400;
+  }
+
+  /* Fire divider */
+  .fire-divider {
+    width: 200px;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--red), var(--orange), transparent);
+    margin: 28px auto;
+    border-radius: 2px;
+    box-shadow: 0 0 10px var(--red);
+  }
+
+  /* Cards */
+  .inferno-card {
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: 12px;
+    padding: 20px 24px;
+    transition: all 0.3s;
+  }
+  .inferno-card:hover {
+    border-color: rgba(255,45,45,0.5);
+    background: rgba(255,45,45,0.08);
+    transform: translateY(-2px);
+  }
+
+  .highlight-card {
+    background: rgba(255,107,26,0.05);
+    border: 1px solid var(--highlight-border);
+    border-radius: 12px;
+    padding: 24px;
+    box-shadow: 0 0 20px rgba(255,107,26,0.1);
+    transition: all 0.3s;
+  }
+  .highlight-card:hover {
+    box-shadow: 0 0 30px rgba(255,107,26,0.2);
+    transform: translateY(-2px);
+  }
+
+  .highlight-card.green {
+    background: rgba(0,255,100,0.05);
+    border-color: rgba(0,255,100,0.3);
+    box-shadow: 0 0 20px rgba(0,255,100,0.08);
+  }
+
+  .card-icon {
+    font-size: 28px;
+    margin-bottom: 10px;
+    display: block;
+  }
+  .card-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: #fff;
+    margin-bottom: 6px;
+  }
+  .card-desc {
+    font-size: 13px;
+    color: rgba(255,255,255,0.55);
+    line-height: 1.5;
+  }
+
+  /* Grid layouts */
+  .cards-row {
+    display: flex;
+    gap: 20px;
+    width: 100%;
+    max-width: 900px;
+    justify-content: center;
+  }
+  .cards-row .highlight-card,
+  .cards-row .inferno-card {
+    flex: 1;
+  }
+
+  .cards-grid-2x3 {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: repeat(2, 1fr);
+    gap: 16px;
+    width: 100%;
+    max-width: 950px;
+  }
+
+  .cards-grid-2x3 .inferno-card {
+    padding: 16px 18px;
+  }
+
+  /* Slide 3 - transition */
+  .transition-slide h2 {
+    font-size: clamp(36px, 5vw, 64px);
+    color: var(--red);
+    text-shadow: 0 0 30px rgba(255,45,45,0.5);
+    margin-bottom: 20px;
+  }
+  .transition-slide .url-text {
+    font-size: 22px;
+    color: rgba(255,255,255,0.8);
+    margin-bottom: 12px;
+  }
+  .transition-slide .url-text span {
+    color: var(--orange);
+    font-weight: 600;
+  }
+  .transition-slide .mono-hint {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+    color: rgba(255,255,255,0.35);
+  }
+  .continue-hint {
+    position: absolute;
+    bottom: 50px;
+    right: 80px;
+    font-size: 15px;
+    color: rgba(255,45,45,0.6);
+    font-family: 'JetBrains Mono', monospace;
+    animation: blink 2s ease-in-out infinite;
+  }
+  @keyframes blink {
+    0%, 100% { opacity: 0.6; }
+    50% { opacity: 1; }
+  }
+
+  /* Slide 5 - LIVE badge */
+  .live-badge {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 28px;
+    background: rgba(255,45,45,0.1);
+    border: 1px solid rgba(255,45,45,0.4);
+    border-radius: 50px;
+    padding: 8px 20px;
+  }
+  .live-dot {
+    width: 10px; height: 10px;
+    background: var(--red);
+    border-radius: 50%;
+    box-shadow: 0 0 8px var(--red);
+    animation: live-pulse 1.2s ease-in-out infinite;
+  }
+  @keyframes live-pulse {
+    0%, 100% { transform: scale(1); box-shadow: 0 0 8px var(--red); }
+    50% { transform: scale(1.4); box-shadow: 0 0 16px var(--red), 0 0 24px rgba(255,45,45,0.4); }
+  }
+  .live-text {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--red);
+    letter-spacing: 3px;
+  }
+
+  /* Slide 7 - two column */
+  .two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    width: 100%;
+    max-width: 900px;
+  }
+  .col-card {
+    padding: 24px;
+    border-radius: 12px;
+  }
+  .col-title {
+    font-size: 16px;
+    font-weight: 700;
+    margin-bottom: 14px;
+  }
+  .col-list {
+    list-style: none;
+    padding: 0;
+  }
+  .col-list li {
+    font-size: 13px;
+    color: rgba(255,255,255,0.65);
+    padding: 5px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    line-height: 1.4;
+  }
+  .col-list li:last-child { border-bottom: none; }
+
+  /* Slide 8 - arch layers */
+  .arch-layers {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 100%;
+    max-width: 800px;
+  }
+  .arch-layer {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    background: rgba(255,45,45,0.04);
+    border: 1px solid rgba(255,45,45,0.15);
+    border-radius: 10px;
+    padding: 14px 20px;
+  }
+  .arch-layer-icon { font-size: 20px; flex-shrink: 0; }
+  .arch-layer-label {
+    font-size: 12px;
+    color: var(--orange);
+    font-family: 'JetBrains Mono', monospace;
+    width: 120px;
+    flex-shrink: 0;
+  }
+  .arch-layer-value {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: rgba(255,255,255,0.6);
+    word-break: break-all;
+  }
+
+  .tech-tags {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin-top: 20px;
+  }
+  .tech-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    padding: 5px 14px;
+    border-radius: 20px;
+    border: 1px solid rgba(255,107,26,0.4);
+    color: var(--orange);
+    background: rgba(255,107,26,0.05);
+  }
+
+  /* Slide 9 - stats */
+  .stats-row {
+    display: flex;
+    gap: 48px;
+    justify-content: center;
+    margin: 20px 0;
+  }
+  .stat-item { text-align: center; }
+  .stat-num {
+    font-size: clamp(32px, 4vw, 52px);
+    font-weight: 700;
+    color: var(--red);
+    text-shadow: 0 0 20px rgba(255,45,45,0.5);
+    display: block;
+  }
+  .stat-label {
+    font-size: 13px;
+    color: rgba(255,255,255,0.5);
+    margin-top: 4px;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .cta-cards {
+    display: flex;
+    gap: 16px;
+    justify-content: center;
+    margin-top: 10px;
+  }
+  .cta-card {
+    background: rgba(255,45,45,0.06);
+    border: 1px solid rgba(255,45,45,0.25);
+    border-radius: 12px;
+    padding: 16px 24px;
+    text-align: center;
+    min-width: 200px;
+  }
+  .cta-icon { font-size: 22px; display: block; margin-bottom: 6px; }
+  .cta-title { font-size: 14px; font-weight: 600; color: var(--orange); margin-bottom: 4px; }
+  .cta-value { font-size: 12px; color: rgba(255,255,255,0.5); font-family: 'JetBrains Mono', monospace; }
+
+  .tagline {
+    font-size: clamp(16px, 2.2vw, 22px);
+    color: var(--red);
+    text-shadow: 0 0 20px rgba(255,45,45,0.4);
+    text-align: center;
+    font-weight: 500;
+    margin-top: 8px;
+  }
+
+  /* Mono small */
+  .mono-small {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: rgba(255,255,255,0.3);
+    text-align: center;
+    margin-top: 10px;
+  }
+
+  /* Reveal animation for cards */
+  .reveal {
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 0.5s ease, transform 0.5s ease;
+  }
+  .slide.active .reveal {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  .slide.active .reveal:nth-child(1) { transition-delay: 0.1s; }
+  .slide.active .reveal:nth-child(2) { transition-delay: 0.2s; }
+  .slide.active .reveal:nth-child(3) { transition-delay: 0.3s; }
+  .slide.active .reveal:nth-child(4) { transition-delay: 0.4s; }
+  .slide.active .reveal:nth-child(5) { transition-delay: 0.5s; }
+  .slide.active .reveal:nth-child(6) { transition-delay: 0.6s; }
+</style>
+</head>
+<body>
+
+<canvas id="starfield"></canvas>
+<canvas id="embers"></canvas>
+
+<div id="progress-bar"></div>
+
+<div id="nav-dots"></div>
+<div id="page-counter">1 / 9</div>
+
+<div id="slides">
+
+  <!-- Slide 1: 开场 -->
+  <div class="slide active" id="slide-1">
+    <div class="cover-glow"></div>
+    <div class="mono-label">太空文明需要基础设施</div>
+    <h1 class="cover-title">你睡着的时候...</h1>
+    <div class="subtitle">
+      你的 Gate <strong>断电了</strong><br>
+      你的炮塔<strong>被打爆了</strong><br>
+      你的资产<strong>消失了</strong><br><br>
+      <span style="color:rgba(255,255,255,0.4)">没有任何保障。</span>
+    </div>
+    <div class="fire-divider"></div>
+    <p class="speaker-note">演讲提示: 停顿2秒，语气沉稳，制造代入感</p>
+  </div>
+
+  <!-- Slide 2: 解决方案 -->
+  <div class="slide" id="slide-2">
+    <div class="cover-glow"></div>
+    <div class="mono-label reveal">我们在这次黑客松里构建了</div>
+    <h1 class="cover-title reveal">NEXUS</h1>
+    <div class="subtitle reveal">
+      EVE Frontier 的 AI Assembly 管理平台<br>
+      <span style="color:rgba(255,255,255,0.4);font-size:16px">从零开始，7天完成</span>
+    </div>
+    <div class="cards-row reveal" style="margin-top:8px">
+      <div class="highlight-card" style="text-align:center">
+        <span class="card-icon">🤖</span>
+        <div class="card-title">AI 驱动</div>
+        <div class="card-desc">Telegram Bot<br>24×7 监控</div>
+      </div>
+      <div class="highlight-card" style="text-align:center">
+        <span class="card-icon">🛡️</span>
+        <div class="card-title">链上保险</div>
+        <div class="card-desc">Move 合约<br>自动赔付</div>
+      </div>
+      <div class="highlight-card" style="text-align:center">
+        <span class="card-icon">📊</span>
+        <div class="card-title">真实数据</div>
+        <div class="card-desc">EVE EYES API<br>链上可验证</div>
+      </div>
+    </div>
+    <div class="fire-divider reveal"></div>
+    <p class="speaker-note">演讲提示: 有力说出 NEXUS，三个特点逐一点到</p>
+  </div>
+
+  <!-- Slide 3: 过渡到官网 -->
+  <div class="slide transition-slide" id="slide-3">
+    <div class="cover-glow"></div>
+    <h2 class="reveal">先看产品</h2>
+    <div class="url-text reveal" style="margin-top:20px">官网: <span>nexus.w3xuan.xyz</span></div>
+    <div class="mono-hint reveal">(切换到官网录屏...)</div>
+    <div class="continue-hint">▶ 点击继续</div>
+    <p class="speaker-note">演讲提示: 说完这句切到官网录屏，15秒展示官网</p>
+  </div>
+
+  <!-- Slide 4: Bot 功能 -->
+  <div class="slide" id="slide-4">
+    <h1 class="slide-title reveal">NEXUS Telegram Bot</h1>
+    <h2 class="slide-subtitle reveal">本次黑客松全新开发</h2>
+    <div class="cards-grid-2x3">
+      <div class="inferno-card reveal">
+        <span class="card-icon">📊</span>
+        <div class="card-title">状态面板</div>
+        <div class="card-desc">一键查看所有 Assembly 状态</div>
+      </div>
+      <div class="inferno-card reveal">
+        <span class="card-icon">⛽</span>
+        <div class="card-title">燃料管理</div>
+        <div class="card-desc">AI 预测耗尽，自动预警</div>
+      </div>
+      <div class="inferno-card reveal">
+        <span class="card-icon">🚪</span>
+        <div class="card-title">门禁管理</div>
+        <div class="card-desc">通行费、白名单、开关控制</div>
+      </div>
+      <div class="inferno-card reveal">
+        <span class="card-icon">🔔</span>
+        <div class="card-title">告警系统</div>
+        <div class="card-desc">链上事件实时 Telegram 推送</div>
+      </div>
+      <div class="inferno-card reveal">
+        <span class="card-icon">🛡️</span>
+        <div class="card-title">链上保险</div>
+        <div class="card-desc">三档方案，Move 合约赔付</div>
+      </div>
+      <div class="inferno-card reveal">
+        <span class="card-icon">🐋</span>
+        <div class="card-title">鲸鱼追踪</div>
+        <div class="card-desc">EVE EYES 真实链上活跃数据</div>
+      </div>
+    </div>
+    <p class="speaker-note">演讲提示: 介绍6个模块，重点在保险和鲸鱼追踪是真实数据</p>
+  </div>
+
+  <!-- Slide 5: 过渡到 Bot 演示 -->
+  <div class="slide" id="slide-5">
+    <div class="cover-glow"></div>
+    <div class="live-badge reveal">
+      <div class="live-dot"></div>
+      <span class="live-text">LIVE</span>
+    </div>
+    <h1 class="cover-title reveal" style="font-size:clamp(48px,7vw,80px)">Bot 实操演示</h1>
+    <div class="subtitle reveal" style="font-size:22px;margin-top:8px">
+      <span style="color:var(--orange);font-weight:600">@EVENexusBot</span> on Telegram
+    </div>
+    <p class="speaker-note">演讲提示: 切到手机/TG 录屏，演示: 状态面板→鲸鱼追踪→保险投保流程</p>
+  </div>
+
+  <!-- Slide 6: 保险亮点 -->
+  <div class="slide" id="slide-6">
+    <h1 class="slide-title reveal">链上去中心化保险</h1>
+    <h2 class="slide-subtitle reveal">EVE Frontier 第一个链上保险协议</h2>
+    <div class="cards-row reveal" style="max-width:950px">
+      <div class="highlight-card" style="text-align:left">
+        <span class="card-icon">🔗</span>
+        <div class="card-title">Move 合约</div>
+        <div class="card-desc">部署在 Sui Testnet<br>赔付逻辑链上执行<br><strong style="color:var(--orange)">不依赖服务器</strong></div>
+      </div>
+      <div class="highlight-card" style="text-align:left">
+        <span class="card-icon">⚡</span>
+        <div class="card-title">自动赔付</div>
+        <div class="card-desc">Assembly 被摧毁<br>→ killmail 链上事件<br>→ 合约自动赔付</div>
+      </div>
+      <div class="highlight-card" style="text-align:left">
+        <span class="card-icon">📊</span>
+        <div class="card-title">三档方案</div>
+        <div class="card-desc">Basic <strong style="color:#fff">10 SUI</strong><br>Standard <strong style="color:#fff">50 SUI</strong><br>Premium <strong style="color:#fff">200 SUI</strong></div>
+      </div>
+    </div>
+    <div class="mono-small reveal" style="margin-top:16px;font-size:10px;color:rgba(255,255,255,0.2)">
+      Package: 0x4ef033c63ed40684847c6ce36b082cefaa6c361b0cb28f833786082f805845c2
+    </div>
+    <p class="speaker-note">演讲提示: 强调"不依赖服务器"，说 killmail 是真实链上数据</p>
+  </div>
+
+  <!-- Slide 7: 数据透明度 -->
+  <div class="slide" id="slide-7">
+    <h1 class="slide-title reveal">数据说明</h1>
+    <div class="two-col reveal" style="margin-top:16px">
+      <div class="col-card highlight-card green">
+        <div class="col-title" style="color:#00ff64">✅ 真实链上数据</div>
+        <ul class="col-list">
+          <li>• Sui 钱包余额 (Sui RPC)</li>
+          <li>• EVE 全网活跃度 (EVE EYES API)</li>
+          <li>• 鲸鱼追踪 (真实地址)</li>
+          <li>• Move 合约 (Testnet 已部署)</li>
+          <li>• killmail 摧毁记录 (3条真实)</li>
+        </ul>
+      </div>
+      <div class="col-card inferno-card" style="border-color:rgba(255,107,26,0.4)">
+        <div class="col-title" style="color:var(--orange)">🔶 Demo 数据</div>
+        <ul class="col-list">
+          <li>• 单 Assembly 状态 (%)</li>
+          <li>• 燃料余量数字</li>
+          <li>• Gate 名称</li>
+          <li style="color:rgba(255,255,255,0.35);font-size:12px;margin-top:8px">(EVE Frontier API 待开放<br>需求已提交)</li>
+        </ul>
+      </div>
+    </div>
+    <p class="speaker-note">演讲提示: 主动说清楚，诚实反而加分。强调架构已就绪，等 API 开放即可替换</p>
+  </div>
+
+  <!-- Slide 8: 链上证明 -->
+  <div class="slide" id="slide-8">
+    <h1 class="slide-title reveal">链上可验证</h1>
+    <h2 class="slide-subtitle reveal">Sui Testnet 已部署</h2>
+    <div class="arch-layers reveal">
+      <div class="arch-layer">
+        <span class="arch-layer-icon">📜</span>
+        <span class="arch-layer-label">Package ID</span>
+        <span class="arch-layer-value">0x4ef033c63ed40684847c6ce36b082cefaa6c361b0cb28f833786082f805845c2</span>
+      </div>
+      <div class="arch-layer">
+        <span class="arch-layer-icon">🔧</span>
+        <span class="arch-layer-label">模块</span>
+        <span class="arch-layer-value">insurance | gate_commander | config</span>
+      </div>
+      <div class="arch-layer">
+        <span class="arch-layer-icon">🏊</span>
+        <span class="arch-layer-label">InsurancePool</span>
+        <span class="arch-layer-value">0xc54592fdd7308a7cc3cafb88453a027a60ea6360c77f73b3ddce25b91e0f2888</span>
+      </div>
+      <div class="arch-layer">
+        <span class="arch-layer-icon">✅</span>
+        <span class="arch-layer-label">TX</span>
+        <span class="arch-layer-value">6eVrVZ64GmCTaZfbGUbCj1CFszW39hKL21nFDzRYp3M4</span>
+      </div>
+    </div>
+    <div class="tech-tags reveal">
+      <span class="tech-tag">Python</span>
+      <span class="tech-tag">Sui Move</span>
+      <span class="tech-tag">EVE EYES</span>
+      <span class="tech-tag">Walrus</span>
+      <span class="tech-tag">Telegram Bot API</span>
+    </div>
+    <p class="speaker-note">演讲提示: 切到 Sui Explorer 搜索 Package ID，展示实际链上记录</p>
+  </div>
+
+  <!-- Slide 9: 收尾 -->
+  <div class="slide" id="slide-9">
+    <div class="cover-glow"></div>
+    <h1 class="cover-title reveal">NEXUS</h1>
+    <div class="subtitle reveal">太空文明的基础设施</div>
+    <div class="stats-row reveal">
+      <div class="stat-item">
+        <span class="stat-num">15,000+</span>
+        <div class="stat-label">已索引交易</div>
+      </div>
+      <div class="stat-item">
+        <span class="stat-num">295,000+</span>
+        <div class="stat-label">Move 调用</div>
+      </div>
+      <div class="stat-item">
+        <span class="stat-num">1个</span>
+        <div class="stat-label">链上保险合约</div>
+      </div>
+    </div>
+    <div class="fire-divider reveal"></div>
+    <div class="cta-cards reveal">
+      <div class="cta-card">
+        <span class="cta-icon">🤖</span>
+        <div class="cta-title">Telegram Bot</div>
+        <div class="cta-value">@EVENexusBot</div>
+      </div>
+      <div class="cta-card">
+        <span class="cta-icon">📂</span>
+        <div class="cta-title">GitHub</div>
+        <div class="cta-value">wrx1234/nexus-eve-frontier</div>
+      </div>
+      <div class="cta-card">
+        <span class="cta-icon">🌐</span>
+        <div class="cta-title">官网</div>
+        <div class="cta-value">nexus.w3xuan.xyz</div>
+      </div>
+    </div>
+    <div class="tagline reveal" style="margin-top:20px">
+      "你的 Assembly 不会睡觉。NEXUS 也不会。"
+    </div>
+    <p class="speaker-note">演讲提示: 结束语有力，停顿，等掌声/问题</p>
+  </div>
+
+</div>
+
+<script>
+// ---- Starfield ----
+const starCanvas = document.getElementById('starfield');
+const starCtx = starCanvas.getContext('2d');
+let stars = [];
+
+function initStars() {
+  starCanvas.width = window.innerWidth;
+  starCanvas.height = window.innerHeight;
+  stars = [];
+  for (let i = 0; i < 180; i++) {
+    stars.push({
+      x: Math.random() * starCanvas.width,
+      y: Math.random() * starCanvas.height,
+      r: Math.random() * 1.5 + 0.3,
+      a: Math.random(),
+      speed: Math.random() * 0.003 + 0.001
+    });
+  }
+}
+
+function drawStars() {
+  starCtx.clearRect(0, 0, starCanvas.width, starCanvas.height);
+  stars.forEach(s => {
+    s.a += s.speed;
+    const alpha = (Math.sin(s.a) + 1) / 2 * 0.7 + 0.1;
+    starCtx.beginPath();
+    starCtx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+    starCtx.fillStyle = `rgba(255,255,255,${alpha})`;
+    starCtx.fill();
+  });
+  requestAnimationFrame(drawStars);
+}
+
+// ---- Embers ----
+const emberCanvas = document.getElementById('embers');
+const emberCtx = emberCanvas.getContext('2d');
+let embers = [];
+
+function initEmbers() {
+  emberCanvas.width = window.innerWidth;
+  emberCanvas.height = window.innerHeight;
+}
+
+function spawnEmber() {
+  embers.push({
+    x: Math.random() * emberCanvas.width,
+    y: emberCanvas.height + 10,
+    vx: (Math.random() - 0.5) * 1.2,
+    vy: -(Math.random() * 2 + 0.8),
+    r: Math.random() * 2.5 + 0.5,
+    life: 1,
+    decay: Math.random() * 0.008 + 0.004
+  });
+}
+
+function drawEmbers() {
+  emberCtx.clearRect(0, 0, emberCanvas.width, emberCanvas.height);
+  if (Math.random() < 0.3) spawnEmber();
+  embers = embers.filter(e => e.life > 0);
+  embers.forEach(e => {
+    e.x += e.vx;
+    e.y += e.vy;
+    e.life -= e.decay;
+    const col = Math.random() < 0.5 ? `255,45,45` : `255,107,26`;
+    emberCtx.beginPath();
+    emberCtx.arc(e.x, e.y, e.r, 0, Math.PI * 2);
+    emberCtx.fillStyle = `rgba(${col},${e.life * 0.8})`;
+    emberCtx.fill();
+  });
+  requestAnimationFrame(drawEmbers);
+}
+
+// ---- Slides ----
+const TOTAL = 9;
+let current = 1;
+
+function goTo(n) {
+  if (n < 1 || n > TOTAL) return;
+  const prev = document.getElementById(`slide-${current}`);
+  if (prev) {
+    prev.classList.remove('active');
+    prev.classList.add('prev');
+    setTimeout(() => prev.classList.remove('prev'), 700);
+  }
+  current = n;
+  const next = document.getElementById(`slide-${current}`);
+  if (next) next.classList.add('active');
+
+  // Progress
+  document.getElementById('progress-bar').style.width = `${(current / TOTAL) * 100}%`;
+  // Counter
+  document.getElementById('page-counter').textContent = `${current} / ${TOTAL}`;
+  // Nav dots
+  document.querySelectorAll('.nav-dot').forEach((d, i) => {
+    d.classList.toggle('active', i === current - 1);
+  });
+}
+
+function next() { goTo(current + 1); }
+function prev() { goTo(current - 1); }
+
+// Build nav dots
+const dotsContainer = document.getElementById('nav-dots');
+for (let i = 1; i <= TOTAL; i++) {
+  const dot = document.createElement('div');
+  dot.className = 'nav-dot' + (i === 1 ? ' active' : '');
+  dot.onclick = () => goTo(i);
+  dotsContainer.appendChild(dot);
+}
+
+// Keyboard
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowRight' || e.key === ' ') { e.preventDefault(); next(); }
+  if (e.key === 'ArrowLeft') { e.preventDefault(); prev(); }
+});
+
+// Click
+let startX = 0;
+document.addEventListener('mousedown', e => { startX = e.clientX; });
+document.addEventListener('mouseup', e => {
+  const dx = e.clientX - startX;
+  // Ignore small clicks and clicks on nav dots
+  if (Math.abs(dx) < 5) {
+    if (!e.target.classList.contains('nav-dot')) next();
+  } else if (dx < -50) next();
+  else if (dx > 50) prev();
+});
+
+// Touch
+let touchX = 0;
+document.addEventListener('touchstart', e => { touchX = e.touches[0].clientX; });
+document.addEventListener('touchend', e => {
+  const dx = e.changedTouches[0].clientX - touchX;
+  if (Math.abs(dx) < 10) next();
+  else if (dx < -40) next();
+  else if (dx > 40) prev();
+});
+
+// Wheel
+let wheelCooldown = false;
+document.addEventListener('wheel', e => {
+  if (wheelCooldown) return;
+  wheelCooldown = true;
+  if (e.deltaY > 0) next();
+  else prev();
+  setTimeout(() => { wheelCooldown = false; }, 800);
+});
+
+// Init
+window.addEventListener('resize', () => {
+  initStars();
+  initEmbers();
+});
+
+initStars();
+initEmbers();
+drawStars();
+drawEmbers();
+
+// Set initial progress
+document.getElementById('progress-bar').style.width = `${(1 / TOTAL) * 100}%`;
+</script>
+</body>
+</html>

@@ -44,7 +44,8 @@ function App() {
     { title: t('Gate Control', '星门控制'), description: t('Dynamic toll pricing, whitelists, and access rules', '动态通行费定价、白名单和访问规则'), icon: <IconDoor size={28} /> },
     { title: t('Revenue Tracking', '收入追踪'), description: t('Daily/weekly reports on gate fees and trade profits', '每日/每周星门费用和交易利润报告'), icon: <IconChartLine size={28} /> },
     { title: t('Walrus Audit Log', 'Walrus 审计日志'), description: t('Every AI decision recorded on decentralized storage', '每个 AI 决策都记录在去中心化存储上'), icon: <IconNotebook size={28} /> },
-    { title: t('Natural Language', '自然语言'), description: t('"Raise gate toll by 20%" - manage via plain text', '"把星门通行费提高20%" - 用自然语言管理'), icon: <IconMessage size={28} /> },
+    { title: t('On-Chain Insurance', '链上保险'), description: t("EVE Frontier's first decentralized insurance protocol. Assembly destroyed? Move contract auto-pays to your wallet.", 'EVE Frontier 第一个去中心化保险协议，Assembly 被摧毁，Move 合约自动赔付到钱包。'), icon: <IconShield size={28} /> },
+    { title: t('Whale Tracker', '鲸鱼追踪'), description: t('Track the most active players on-chain via EVE EYES real-time indexer. 100% real on-chain data.', '通过 EVE EYES 链上索引器追踪全链最活跃玩家，100% 真实链上数据。'), icon: <span className="text-2xl">🐋</span> },
   ]
 
   const ecosystemSteps = [
@@ -168,6 +169,12 @@ function App() {
               {t('AI-powered Smart Assembly management for EVE Frontier. Monitor fuel, automate trades, defend your base - with real on-chain data via EVE EYES integration. 24/7.',
                 'AI 驱动的 EVE Frontier 智能组装体管理。监控燃料、自动交易、防御基地 - 通过 EVE EYES 集成获取真实链上数据。全天候运行。')}
             </motion.p>
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }}
+              className="mt-3 flex items-center gap-2 flex-wrap">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-cyan-500/10 border border-cyan-500/30 text-cyan-400">
+                🛡️ {t('Featuring On-Chain Insurance · Real Data via EVE EYES', '含链上保险协议 · EVE EYES 真实数据')}
+              </span>
+            </motion.div>
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}
               className="mt-8 flex gap-4">
               <a href="https://t.me/EVENexusBot" target="_blank" rel="noopener">
@@ -194,6 +201,65 @@ function App() {
           <h2 className="text-3xl md:text-4xl font-bold text-center mb-4">{t('Core Features', '核心功能')}</h2>
           <p className="text-center text-neutral-400 mb-10">{t('Everything you need to manage Smart Assemblies in EVE Frontier', '管理 EVE Frontier 智能组装体所需的一切')}</p>
           <FeaturesWithHoverEffects features={features8} />
+        </div>
+      </section>
+
+      {/* ===== INSURANCE PROTOCOL ===== */}
+      <section className="py-20 bg-gradient-to-b from-[#09090b] via-blue-950/10 to-[#09090b]">
+        <div className="max-w-5xl mx-auto px-4">
+          <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} className="text-center mb-12">
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-medium bg-blue-500/10 border border-blue-500/30 text-blue-400 mb-4">
+              🛡️ {t('First Decentralized Insurance on EVE Frontier', 'EVE Frontier 第一个去中心化保险')}
+            </div>
+            <h2 className="text-3xl md:text-4xl font-bold mb-2">
+              <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-cyan-400">
+                {t('NEXUS Insurance Protocol', 'NEXUS 链上保险协议')}
+              </span>
+            </h2>
+            <p className="text-neutral-400 text-lg">{t("EVE Frontier's First Decentralized Insurance", 'EVE Frontier 第一个去中心化保险协议')}</p>
+          </motion.div>
+
+          <div className="grid md:grid-cols-3 gap-6 mb-10">
+            {[
+              { medal: '🥉', plan: 'Basic', coverage: '10 SUI', premium: '0.15 SUI/wk', covers: t('Destruction', 'Assembly 被摧毁'), coversCn: 'Destruction', gradient: 'from-amber-900/30 to-amber-800/10', border: 'border-amber-700/30', badge: 'text-amber-400' },
+              { medal: '🥈', plan: 'Standard', coverage: '50 SUI', premium: '0.6 SUI/wk', covers: t('Destruction + Offline', '摧毁 + 离线超时'), coversCn: 'Destruction + Offline', gradient: 'from-slate-700/30 to-slate-600/10', border: 'border-slate-500/30', badge: 'text-slate-300', featured: true },
+              { medal: '🥇', plan: 'Premium', coverage: '200 SUI', premium: '2 SUI/wk', covers: t('Full Coverage', '全覆盖'), coversCn: 'Full Coverage', gradient: 'from-yellow-900/30 to-yellow-800/10', border: 'border-yellow-600/30', badge: 'text-yellow-400' },
+            ].map((item, i) => (
+              <motion.div key={i}
+                initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }}
+                className={`relative rounded-2xl border bg-gradient-to-b ${item.gradient} ${item.border} p-6 ${item.featured ? 'ring-1 ring-cyan-500/30 scale-105' : ''}`}>
+                {item.featured && (
+                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-0.5 rounded-full text-xs font-medium bg-cyan-500 text-black">{t('Popular', '热门')}</div>
+                )}
+                <div className="text-4xl mb-3">{item.medal}</div>
+                <h3 className={`text-xl font-bold mb-4 ${item.badge}`}>{item.plan}</h3>
+                <div className="space-y-3 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-neutral-500">{t('Coverage', '保额')}</span>
+                    <span className="font-mono font-bold text-white">{item.coverage}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-neutral-500">{t('Premium', '保费')}</span>
+                    <span className="font-mono font-bold text-cyan-400">{item.premium}</span>
+                  </div>
+                  <div className="pt-2 border-t border-neutral-800">
+                    <span className="text-neutral-500 text-xs">{t('Covers', '覆盖')}</span>
+                    <p className="text-white mt-1">{item.covers}</p>
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+
+          <motion.div initial={{ opacity: 0 }} whileInView={{ opacity: 1 }}
+            className="rounded-xl border border-neutral-800 bg-neutral-900/50 p-4 text-center space-y-2">
+            <p className="text-sm text-neutral-400">
+              {t('Move Contract deployed on Sui Testnet · Move 合约已部署到 Sui Testnet', 'Move 合约已部署到 Sui Testnet · Move Contract deployed on Sui Testnet')}
+            </p>
+            <p className="font-mono text-xs text-cyan-400 break-all">
+              Package: 0x4ef033c63ed40684847c6ce36b082cefaa6c361b0cb28f833786082f805845c2
+            </p>
+          </motion.div>
         </div>
       </section>
 
